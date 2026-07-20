@@ -3,16 +3,19 @@
 
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
+
 #include <windows.h>
+#include <shellapi.h>
+#include <variant>
 #include <psapi.h>
+#include <fstream>
+#include <d3d11.h>
+#include <chrono>
 #include <thread>
 #include <atomic>
 #include <deque>
-#include <fstream>
 #include <mutex>
-#include <variant>
-#include <shellapi.h>
-#include <d3d11.h>
+
 using namespace std::chrono_literals;
 
 #include <MinHook.h>
