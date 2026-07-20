@@ -83,7 +83,6 @@ target_include_directories(${PROJECT_NAME}
         PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:include>
-        PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/src
         ${fmt_SOURCE_DIR}/include
         ${minhook_SOURCE_DIR}/include
@@ -97,7 +96,7 @@ target_precompile_headers(${PROJECT_NAME}
         src/pch.hpp
 )
 
-target_link_libraries(${PROJECT_NAME} PRIVATE
+target_link_libraries(${PROJECT_NAME} PUBLIC
         minhook
         fmt
         d3d11
