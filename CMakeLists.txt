@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 4.3)
+cmake_minimum_required(VERSION 3.31)
 set(PROJECT_NAME "fw")
 project(${PROJECT_NAME})
 set(CMAKE_CXX_STANDARD 17)
