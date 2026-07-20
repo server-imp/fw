@@ -2,6 +2,8 @@
 #define FW_PATTERN_HPP
 #pragma once
 
+#include "pch.hpp"
+
 namespace memory
 {
     class Pattern

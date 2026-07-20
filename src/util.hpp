@@ -2,7 +2,12 @@
 #define FW_UTIL_HPP
 #pragma once
 
-namespace memory { class Handle; }
+#include "pch.hpp"
+
+namespace memory
+{
+    class Handle;
+}
 
 /// Evaluates to true only once per call site.
 #define TRIGGER_ONCE []() -> bool { static bool once = false; if (once) return false; once = true; return true; }()

@@ -2,6 +2,8 @@
 #define FW_HOOK_HPP
 #pragma once
 
+#include "pch.hpp"
+
 namespace memory
 {
     class Hook

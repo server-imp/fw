@@ -2,6 +2,8 @@
 #define FW_POINTER_VALIDATOR_HPP
 #pragma once
 
+#include "pch.hpp"
+
 namespace memory
 {
     class PointerValidator

@@ -1,6 +1,8 @@
 #ifndef FW_SETTINGS_HPP
 #define FW_SETTINGS_HPP
 
+#include "pch.hpp"
+
 namespace fw
 {
     class Settings;
