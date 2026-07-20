@@ -92,7 +92,7 @@ target_include_directories(${PROJECT_NAME}
 )
 
 target_precompile_headers(${PROJECT_NAME}
-        PRIVATE
+        PUBLIC
         src/pch.hpp
 )
 
