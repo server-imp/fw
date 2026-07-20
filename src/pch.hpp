@@ -15,6 +15,7 @@
 #include <chrono>
 #include <thread>
 #include <atomic>
+#include <string>
 #include <deque>
 #include <mutex>
 
