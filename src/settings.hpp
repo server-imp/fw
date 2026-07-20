@@ -1,12 +1,6 @@
 #ifndef FW_SETTINGS_HPP
 #define FW_SETTINGS_HPP
 
-#include <utility>
-#include <variant>
-#include <memory>
-#include <type_traits>
-#include <nlohmann/json.hpp>
-
 namespace fw
 {
     class Settings;

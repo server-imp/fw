@@ -1,7 +1,4 @@
 #include "scanner.hpp"
-
-#include <set>
-
 #include "pattern.hpp"
 #include "../logger.hpp"
 #include "util.hpp"

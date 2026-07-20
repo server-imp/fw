@@ -1,8 +1,6 @@
 #ifndef FW_D3D11_HPP
 #define FW_D3D11_HPP
 #pragma once
-#include <d3d11.h>
-
 #include "memory/hook.hpp"
 
 namespace memory::hooks

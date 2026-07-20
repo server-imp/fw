@@ -3,7 +3,6 @@
 #include "scanner.hpp"
 #include "logger.hpp"
 #include "util.hpp"
-#include "Zydis/Zydis.h"
 
 #ifndef FW_MIN_STRING_LENGTH
 #define FW_MIN_STRING_LENGTH 5

@@ -1,7 +1,6 @@
 #ifndef FW_LOGGER_HPP
 #define FW_LOGGER_HPP
 #pragma once
-#include "pch.hpp"
 #include "util.hpp"
 
 namespace logging

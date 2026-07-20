@@ -1,7 +1,6 @@
 #include "pointer_validator.hpp"
 
 #include "logger.hpp"
-#include "util.hpp"
 
 bool memory::PointerValidator::probe(const uintptr_t pointer)
 {

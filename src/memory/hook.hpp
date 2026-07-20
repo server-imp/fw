@@ -1,7 +1,6 @@
 #ifndef FW_HOOK_HPP
 #define FW_HOOK_HPP
 #pragma once
-#include "pch.hpp"
 
 namespace memory
 {

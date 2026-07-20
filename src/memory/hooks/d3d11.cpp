@@ -1,5 +1,4 @@
 #include "d3d11.hpp"
-#include <d3d11.h>
 #include "logger.hpp"
 #include "util.hpp"
 

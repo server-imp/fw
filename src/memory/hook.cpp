@@ -5,8 +5,6 @@
 #include "handle.hpp"
 #include "module.hpp"
 #include "../logger.hpp"
-
-#include "MinHook.h"
 #include "util.hpp"
 
 memory::Hook::Hook(std::string name, void* target, void* original, void* ownFunction) : _name(std::move(name)),

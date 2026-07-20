@@ -2,7 +2,6 @@
 #define FW_MODULE_HPP
 #pragma once
 #include "range.hpp"
-#include "Zydis/Zydis.h"
 
 namespace memory
 {

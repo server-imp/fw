@@ -1,9 +1,5 @@
 #include "logger.hpp"
 
-#include <algorithm>
-
-#include "util.hpp"
-
 const char* logging::logLevelToString(const LogLevel level)
 {
     switch (level)

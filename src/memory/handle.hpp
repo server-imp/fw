@@ -1,7 +1,6 @@
 #ifndef FW_HANDLE_HPP
 #define FW_HANDLE_HPP
 #pragma once
-#include "logger.hpp"
 
 namespace memory
 {
@@ -29,7 +28,7 @@ namespace memory
 
         [[nodiscard]] Handle sub(const Handle& other) const;
 
-        Handle rip() const;
+        [[nodiscard]] Handle rip() const;
 
         [[nodiscard]] Handle resolve_relative_call() const;
 
@@ -42,7 +41,6 @@ namespace memory
         template <typename T>
         std::enable_if_t<std::is_object_v<T>, T&> deref() const
         {
-            //LOG_DBG("Dereferencing {:08X} [{}]", _pointer, sizeof(T));
             return *to_ptr<T*>();
         }
 

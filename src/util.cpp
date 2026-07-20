@@ -1,10 +1,7 @@
 #include "util.hpp"
 
-#include <algorithm>
-#include <cwctype>
 
 #include "logger.hpp"
-#include <shellapi.h>
 
 #include "memory/handle.hpp"
 

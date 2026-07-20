@@ -1,5 +1,7 @@
 #include "handle.hpp"
 
+#include "logger.hpp"
+
 memory::Handle::Handle(void* pointer)
 {
     this->_pointer = reinterpret_cast<uintptr_t>(pointer);

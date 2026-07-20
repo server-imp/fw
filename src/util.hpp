@@ -1,7 +1,6 @@
 #ifndef FW_UTIL_HPP
 #define FW_UTIL_HPP
 #pragma once
-#include "pch.hpp"
 
 namespace memory { class Handle; }
 
