@@ -6,10 +6,12 @@
 
 #include <windows.h>
 #include <shellapi.h>
+#include <functional>
 #include <variant>
 #include <psapi.h>
 #include <fstream>
 #include <d3d11.h>
+#include <vector>
 #include <chrono>
 #include <thread>
 #include <atomic>
