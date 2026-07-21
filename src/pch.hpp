@@ -7,6 +7,7 @@
 #include <windows.h>
 #include <shellapi.h>
 #include <functional>
+#include <unordered_set>
 #include <variant>
 #include <psapi.h>
 #include <fstream>
