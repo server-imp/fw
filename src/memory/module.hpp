@@ -8,6 +8,8 @@ namespace memory
     class RefData
     {
     public:
+        friend struct std::hash<RefData>;
+
         enum class Type : uint8_t
         {
             Any,
@@ -18,17 +20,32 @@ namespace memory
         };
 
     private:
-        ZydisDecodedInstruction _instruction {};
-        Type                    _type {};
+        Handle  _instruction {};
+        uint8_t _instructionLength {};
+        Type    _type {};
+        Handle  _reference {};
 
     public:
         RefData() = default;
-        explicit RefData(const ZydisDecodedInstruction& instruction, Type type);
+        explicit RefData(uintptr_t instruction, uint8_t instructionLength, Type type, uintptr_t referenced);
+        explicit RefData(const Handle& instruction, uint8_t instructionLength, Type type, const Handle& referenced);
 
-        [[nodiscard]] const ZydisDecodedInstruction& instruction() const;
-        [[nodiscard]] Type                           type() const;
+        [[nodiscard]] const Handle& instruction() const;
+        [[nodiscard]] uint8_t       instructionLength() const;
+        [[nodiscard]] Type          type() const;
+        [[nodiscard]] const Handle& reference() const;
+
+        bool operator==(const RefData& other) const
+        {
+            return _instruction == other._instruction;
+        }
 
         static const char* typeToString(Type type);
+    };
+
+    struct RefDataHash
+    {
+        std::size_t operator()(const RefData& obj) const noexcept;
     };
 
     class Module : public Range
@@ -42,8 +59,8 @@ namespace memory
         std::vector<Range> _textSections {};
         std::vector<Range> _dataSections {};
 
-        bool                                   _ripRelativeInitialized {};
-        std::unordered_map<uintptr_t, RefData> _ripRelativeInstructions {};
+        bool                                     _ripRelativeInitialized {};
+        std::unordered_set<RefData, RefDataHash> _ripRelativeInstructions {};
 
         bool                                               _refStringsInitialized {};
         std::unordered_map<uintptr_t, std::vector<Handle>> _refStringsAscii {};
@@ -83,7 +100,7 @@ namespace memory
 
         bool getDataSection(const Handle& handle, Range& result);
 
-        const std::unordered_map<uintptr_t, RefData>& ripRelativeInstructions();
+        const std::unordered_set<RefData, RefDataHash>& ripRelativeInstructions();
 
         const std::unordered_map<uintptr_t, std::vector<Handle>>& refStringsAscii();
         const std::unordered_map<uintptr_t, std::vector<Handle>>& refStringsUtf16();

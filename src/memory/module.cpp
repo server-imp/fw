@@ -11,17 +11,39 @@
 #define FW_MAX_STRING_LENGTH 128
 #endif
 
-memory::RefData::RefData(const ZydisDecodedInstruction& instruction, const Type type) : _instruction(instruction),
-    _type(type) {}
+memory::RefData::RefData(
+    const uintptr_t instruction,
+    const uint8_t   instructionLength,
+    const Type      type,
+    const uintptr_t referenced
+) : _instruction(instruction), _instructionLength(instructionLength), _type(type), _reference(referenced) {}
 
-const ZydisDecodedInstruction& memory::RefData::instruction() const
+memory::RefData::RefData(
+    const Handle& instruction,
+    const uint8_t instructionLength,
+    const Type    type,
+    const Handle& referenced
+)
+    : _instruction(instruction), _instructionLength(instructionLength), _type(type), _reference(referenced) {}
+
+const memory::Handle& memory::RefData::instruction() const
 {
     return _instruction;
+}
+
+uint8_t memory::RefData::instructionLength() const
+{
+    return _instructionLength;
 }
 
 memory::RefData::Type memory::RefData::type() const
 {
     return _type;
+}
+
+const memory::Handle& memory::RefData::reference() const
+{
+    return _reference;
 }
 
 const char* memory::RefData::typeToString(const Type type)
@@ -36,6 +58,11 @@ const char* memory::RefData::typeToString(const Type type)
     }
 
     return "Unknown";
+}
+
+std::size_t memory::RefDataHash::operator()(const RefData& obj) const noexcept
+{
+    return std::hash<uintptr_t> {}(obj.instruction().raw());
 }
 
 void memory::Module::initRipRelativeIndex()
@@ -129,7 +156,12 @@ void memory::Module::initRipRelativeIndex()
                 else
                     type = RefData::Type::Address;
 
-                _ripRelativeInstructions.emplace(address, RefData(instruction, type));
+                _ripRelativeInstructions.emplace(
+                    address,
+                    instruction.length,
+                    type,
+                    address + instruction.length + disp.value
+                );
             }
 
         advance:
@@ -208,25 +240,24 @@ void memory::Module::initRefStrings()
     const auto instructions = ripRelativeInstructions();
     const auto start        = std::chrono::high_resolution_clock::now();
 
-    for (const auto& [address, data] : instructions)
+    for (const auto& data : instructions)
     {
-        const auto& ins = data.instruction();
-        auto        key = address + ins.length + ins.raw.disp.value;
+        auto key = data.reference().raw();
 
         if (auto it = refState.find(key); it != refState.end())
         {
             switch (it->second)
             {
             case RefType::Reject: continue;
-            case RefType::Ascii: _refStringsAscii[key].emplace_back(address);
+            case RefType::Ascii: _refStringsAscii[key].emplace_back(data.instruction());
                 continue;
-            case RefType::Utf16: _refStringsUtf16[key].emplace_back(address);
+            case RefType::Utf16: _refStringsUtf16[key].emplace_back(data.instruction());
                 continue;
             }
         }
 
-        auto  ref = Handle(key);
-        Range dataSection {};
+        const auto& ref = data.reference();
+        Range       dataSection {};
 
         if (!getDataSection(ref, dataSection))
         {
@@ -241,14 +272,14 @@ void memory::Module::initRefStrings()
 
         if (asciiMaxLen >= FW_MIN_STRING_LENGTH && util::looksLikeAscii(ref, FW_MIN_STRING_LENGTH, asciiMaxLen))
         {
-            _refStringsAscii.try_emplace(key).first->second.emplace_back(address);
+            _refStringsAscii.try_emplace(key).first->second.emplace_back(data.instruction());
             refState.emplace(key, RefType::Ascii);
             continue;
         }
 
         if (utf16MaxLen >= FW_MIN_STRING_LENGTH && util::looksLikeUtf16Ascii(ref, FW_MIN_STRING_LENGTH, utf16MaxLen))
         {
-            _refStringsUtf16.try_emplace(key).first->second.emplace_back(address);
+            _refStringsUtf16.try_emplace(key).first->second.emplace_back(data.instruction());
             refState.emplace(key, RefType::Utf16);
             continue;
         }
@@ -336,16 +367,14 @@ bool memory::Module::findReferences(
 
     const uintptr_t target = handle.raw();
 
-    for (const auto& [address, data] : ripRelativeInstructions())
+    for (const auto& data : ripRelativeInstructions())
     {
         if (type != RefData::Type::Any && data.type() != type)
             continue;
 
-        const auto& ins = data.instruction();
-
-        if (address + ins.length + ins.raw.disp.value == target)
+        if (data.reference() == target)
         {
-            results.emplace_back(address);
+            results.emplace_back(data.instruction());
             if (max > 0 && results.size() >= max)
             {
                 return true;
@@ -513,7 +542,7 @@ bool memory::Module::getDataSection(const Handle& handle, Range& result)
     return false;
 }
 
-const std::unordered_map<uintptr_t, memory::RefData>& memory::Module::ripRelativeInstructions()
+const std::unordered_set<memory::RefData, memory::RefDataHash>& memory::Module::ripRelativeInstructions()
 {
     if (!_ripRelativeInitialized)
     {
