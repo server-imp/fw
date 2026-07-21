@@ -341,9 +341,9 @@ bool memory::Module::findWstring(const std::wstring& string, Handle& result)
     return false;
 }
 
-bool memory::Module::findReference(const Handle& handle, Handle& result, const RefData::Type type)
+bool memory::Module::findReference(const Handle& handle, RefData& result, const RefData::Type type)
 {
-    std::vector<Handle> results {};
+    std::vector<RefData> results {};
 
     if (!findReferences(handle, results, type, 1))
     {
@@ -356,7 +356,7 @@ bool memory::Module::findReference(const Handle& handle, Handle& result, const R
 
 bool memory::Module::findReferences(
     const Handle&        handle,
-    std::vector<Handle>& results,
+    std::vector<RefData>& results,
     const RefData::Type  type,
     const int            max
 )
@@ -374,7 +374,7 @@ bool memory::Module::findReferences(
 
         if (data.reference() == target)
         {
-            results.emplace_back(data.instruction());
+            results.emplace_back(data);
             if (max > 0 && results.size() >= max)
             {
                 return true;

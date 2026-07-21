@@ -83,10 +83,10 @@ namespace memory
 
         bool findWstring(const std::wstring& string, Handle& result);
 
-        bool findReference(const Handle& handle, Handle& result, RefData::Type type = RefData::Type::Any);
+        bool findReference(const Handle& handle, RefData& result, RefData::Type type = RefData::Type::Any);
         bool findReferences(
             const Handle&        handle,
-            std::vector<Handle>& results,
+            std::vector<RefData>& results,
             RefData::Type        type = RefData::Type::Any,
             int                  max  = 0
         );
