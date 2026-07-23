@@ -1,6 +1,7 @@
 #include "handle.hpp"
 
 #include "logger.hpp"
+#include "protection.hpp"
 
 memory::Handle::Handle(void* pointer)
 {
@@ -61,6 +62,30 @@ memory::Handle memory::Handle::resolve_relative_call() const
     LOG_DBG("Resolved to: {:08X}", result.raw());
 
     return result;
+}
+
+bool memory::Handle::nop(const size_t size) const
+{
+    LOG_DBG("NOPing {} bytes at {:08X}", size, _pointer);
+
+    if (size == 0)
+    {
+        LOG_DBG("Invalid size");
+        return false;
+    }
+
+    const auto address = reinterpret_cast<void*>(_pointer);
+    Protection protection(*this, size, PAGE_EXECUTE_READWRITE);
+
+    std::memset(address, 0x90, size);
+
+    if (FlushInstructionCache(GetCurrentProcess(), address, size) == 0)
+    {
+        LOG_DBG("Failed to flush instruction cache");
+        return false;
+    }
+
+    return true;
 }
 
 bool memory::Handle::operator==(const Handle& other) const noexcept
