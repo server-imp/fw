@@ -35,6 +35,8 @@ namespace memory
         [[nodiscard]] Type          type() const;
         [[nodiscard]] const Handle& reference() const;
 
+        [[nodiscard]] bool nop() const;
+
         bool operator==(const RefData& other) const
         {
             return _instruction == other._instruction;
@@ -62,9 +64,9 @@ namespace memory
         bool                                     _ripRelativeInitialized {};
         std::unordered_set<RefData, RefDataHash> _ripRelativeInstructions {};
 
-        bool                                               _refStringsInitialized {};
-        std::unordered_map<uintptr_t, std::vector<Handle>> _refStringsAscii {};
-        std::unordered_map<uintptr_t, std::vector<Handle>> _refStringsUtf16 {};
+        bool                                                _refStringsInitialized {};
+        std::unordered_map<uintptr_t, std::vector<RefData>> _refStringsAscii {};
+        std::unordered_map<uintptr_t, std::vector<RefData>> _refStringsUtf16 {};
 
         void initRipRelativeIndex();
         void initSections();
@@ -85,15 +87,15 @@ namespace memory
 
         bool findReference(const Handle& handle, RefData& result, RefData::Type type = RefData::Type::Any);
         bool findReferences(
-            const Handle&        handle,
+            const Handle&         handle,
             std::vector<RefData>& results,
-            RefData::Type        type = RefData::Type::Any,
-            int                  max  = 0
+            RefData::Type         type = RefData::Type::Any,
+            int                   max  = 0
         );
-        bool findStringReference(const std::string& string, Handle& result);
-        bool findStringReferences(const std::string& string, std::vector<Handle>& results, int max = 0);
-        bool findWstringReference(const std::wstring& string, Handle& result);
-        bool findWstringReferences(const std::wstring& string, std::vector<Handle>& results, int max = 0);
+        bool findStringReference(const std::string& string, RefData& result);
+        bool findStringReferences(const std::string& string, std::vector<RefData>& results, int max = 0);
+        bool findWstringReference(const std::wstring& string, RefData& result);
+        bool findWstringReferences(const std::wstring& string, std::vector<RefData>& results, int max = 0);
 
         [[nodiscard]] const std::vector<Range>& textSections();
         [[nodiscard]] const std::vector<Range>& dataSections();
@@ -102,11 +104,13 @@ namespace memory
 
         const std::unordered_set<RefData, RefDataHash>& ripRelativeInstructions();
 
-        const std::unordered_map<uintptr_t, std::vector<Handle>>& refStringsAscii();
-        const std::unordered_map<uintptr_t, std::vector<Handle>>& refStringsUtf16();
+        const std::unordered_map<uintptr_t, std::vector<RefData>>& refStringsAscii();
+        const std::unordered_map<uintptr_t, std::vector<RefData>>& refStringsUtf16();
 
         bool isInCodeSection(const Handle& handle);
         bool isInDataSection(const Handle& handle);
+
+        void clear();
 
         ~Module();
 

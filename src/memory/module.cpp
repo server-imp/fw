@@ -46,6 +46,11 @@ const memory::Handle& memory::RefData::reference() const
     return _reference;
 }
 
+bool memory::RefData::nop() const
+{
+    return _instruction.nop(_instructionLength);
+}
+
 const char* memory::RefData::typeToString(const Type type)
 {
     switch (type)
@@ -249,9 +254,9 @@ void memory::Module::initRefStrings()
             switch (it->second)
             {
             case RefType::Reject: continue;
-            case RefType::Ascii: _refStringsAscii[key].emplace_back(data.instruction());
+            case RefType::Ascii: _refStringsAscii[key].emplace_back(data);
                 continue;
-            case RefType::Utf16: _refStringsUtf16[key].emplace_back(data.instruction());
+            case RefType::Utf16: _refStringsUtf16[key].emplace_back(data);
                 continue;
             }
         }
@@ -272,14 +277,14 @@ void memory::Module::initRefStrings()
 
         if (asciiMaxLen >= FW_MIN_STRING_LENGTH && util::looksLikeAscii(ref, FW_MIN_STRING_LENGTH, asciiMaxLen))
         {
-            _refStringsAscii.try_emplace(key).first->second.emplace_back(data.instruction());
+            _refStringsAscii.try_emplace(key).first->second.emplace_back(data);
             refState.emplace(key, RefType::Ascii);
             continue;
         }
 
         if (utf16MaxLen >= FW_MIN_STRING_LENGTH && util::looksLikeUtf16Ascii(ref, FW_MIN_STRING_LENGTH, utf16MaxLen))
         {
-            _refStringsUtf16.try_emplace(key).first->second.emplace_back(data.instruction());
+            _refStringsUtf16.try_emplace(key).first->second.emplace_back(data);
             refState.emplace(key, RefType::Utf16);
             continue;
         }
@@ -355,10 +360,10 @@ bool memory::Module::findReference(const Handle& handle, RefData& result, const 
 }
 
 bool memory::Module::findReferences(
-    const Handle&        handle,
+    const Handle&         handle,
     std::vector<RefData>& results,
-    const RefData::Type  type,
-    const int            max
+    const RefData::Type   type,
+    const int             max
 )
 {
     LOG_DBG("Looking for references to {:08X} [{}]", handle.raw(), RefData::typeToString(type));
@@ -386,9 +391,9 @@ bool memory::Module::findReferences(
     return !results.empty();
 }
 
-bool memory::Module::findStringReference(const std::string& string, Handle& result)
+bool memory::Module::findStringReference(const std::string& string, RefData& result)
 {
-    std::vector<Handle> results {};
+    std::vector<RefData> results {};
 
     if (!findStringReferences(string, results, 1))
     {
@@ -399,7 +404,7 @@ bool memory::Module::findStringReference(const std::string& string, Handle& resu
     return true;
 }
 
-bool memory::Module::findStringReferences(const std::string& string, std::vector<Handle>& results, const int max)
+bool memory::Module::findStringReferences(const std::string& string, std::vector<RefData>& results, const int max)
 {
     LOG_DBG("Looking for references to \"{}\"", string);
 
@@ -447,9 +452,9 @@ bool memory::Module::findStringReferences(const std::string& string, std::vector
     return true;
 }
 
-bool memory::Module::findWstringReference(const std::wstring& string, Handle& result)
+bool memory::Module::findWstringReference(const std::wstring& string, RefData& result)
 {
-    std::vector<Handle> results {};
+    std::vector<RefData> results {};
 
     if (!findWstringReferences(string, results, 1))
     {
@@ -460,7 +465,7 @@ bool memory::Module::findWstringReference(const std::wstring& string, Handle& re
     return true;
 }
 
-bool memory::Module::findWstringReferences(const std::wstring& string, std::vector<Handle>& results, const int max)
+bool memory::Module::findWstringReferences(const std::wstring& string, std::vector<RefData>& results, const int max)
 {
     LOG_DBG("Looking for references to \"{}\"", util::wstringToString(string));
 
@@ -552,7 +557,7 @@ const std::unordered_set<memory::RefData, memory::RefDataHash>& memory::Module::
     return _ripRelativeInstructions;
 }
 
-const std::unordered_map<uintptr_t, std::vector<memory::Handle>>& memory::Module::refStringsAscii()
+const std::unordered_map<uintptr_t, std::vector<memory::RefData>>& memory::Module::refStringsAscii()
 {
     if (!_refStringsInitialized)
     {
@@ -562,7 +567,7 @@ const std::unordered_map<uintptr_t, std::vector<memory::Handle>>& memory::Module
     return _refStringsAscii;
 }
 
-const std::unordered_map<uintptr_t, std::vector<memory::Handle>>& memory::Module::refStringsUtf16()
+const std::unordered_map<uintptr_t, std::vector<memory::RefData>>& memory::Module::refStringsUtf16()
 {
     if (!_refStringsInitialized)
     {
@@ -582,13 +587,22 @@ bool memory::Module::isInDataSection(const Handle& handle)
     return contains(dataSections(), handle);
 }
 
-memory::Module::~Module()
+void memory::Module::clear()
 {
+    _sectionsInitialized    = false;
+    _ripRelativeInitialized = false;
+    _refStringsInitialized  = false;
+
     _dataSections.clear();
     _textSections.clear();
     _refStringsAscii.clear();
     _refStringsUtf16.clear();
     _ripRelativeInstructions.clear();
+}
+
+memory::Module::~Module()
+{
+    clear();
 }
 
 memory::Module memory::Module::getFromHandle(const HMODULE hModule)
