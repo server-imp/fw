@@ -20,68 +20,82 @@ ptrdiff_t memory::ProtectedRegion::size() const
 
 memory::Protection::Protection(const Handle& base, const size_t size, const DWORD protection)
 {
-    if (!base.raw())
+    LOG_DBG("Protecting {:08X}+{:04X} [{:08X}]", base.raw(), size, protection);
+
+    if (!base.raw() || !size)
     {
-        LOG_DBG("Invalid base pointer");
+        LOG_DBG("Invalid protection range");
         return;
     }
 
-    Handle       current = base;
-    const Handle end     = base.add(static_cast<std::ptrdiff_t>(size));
+    const Handle end = base.add(static_cast<std::ptrdiff_t>(size));
 
-    while (current < end)
+    for (Handle current = base; current < end;)
     {
         MEMORY_BASIC_INFORMATION info {};
         if (!VirtualQuery(current.to_ptr<void*>(), &info, sizeof(info)))
         {
             LOG_DBG("VirtualQuery failed: {:08X} [{}]", current.raw(), GetLastError());
-            break;
+            rollback();
+            return;
         }
-
-        Handle     regionStart(info.BaseAddress);
-        const auto regionEnd = regionStart.add(static_cast<std::ptrdiff_t>(info.RegionSize));
 
         if (info.State != MEM_COMMIT)
         {
             LOG_DBG("Memory not committed: {:08X}", current.raw());
-            current = regionEnd;
-            break;
+            rollback();
+            return;
         }
 
-        auto protectionStart = current;
-        auto protectionEnd   = end < regionEnd ? end : regionEnd;
+        const Handle regionBegin(info.BaseAddress);
+        const Handle regionEnd = regionBegin.add(static_cast<std::ptrdiff_t>(info.RegionSize));
 
-        const size_t protectionSize = protectionEnd.raw() - protectionStart.raw();
+        const Handle protectBegin = current;
+        const Handle protectEnd   = std::min(end, regionEnd);
 
-        DWORD oldProtect;
-        if (!VirtualProtect(protectionStart.to_ptr<void*>(), protectionSize, protection, &oldProtect))
+        const auto protectSize = protectEnd.raw() - protectBegin.raw();
+
+        DWORD oldProtect {};
+        if (!VirtualProtect(protectBegin.to_ptr<void*>(), protectSize, protection, &oldProtect))
         {
-            LOG_DBG("VirtualProtect failed: {:08X} [{}]", protectionStart.raw(), GetLastError());
-            current = regionEnd;
-            break;
+            LOG_DBG("VirtualProtect failed: {:08X} [{}]", protectBegin.raw(), GetLastError());
+
+            rollback();
+            return;
         }
 
-        _regions.push_back({ .range = Range(protectionStart, protectionEnd), .oldProtect = oldProtect });
-        current = regionEnd;
-    }
-}
+        _regions.emplace_back(ProtectedRegion { .range = Range(protectBegin, protectEnd), .oldProtect = oldProtect });
 
-memory::Protection::Protection(const Range& range, const DWORD protection) : Protection(
-    range.start(),
-    range.size(),
-    protection
-) {}
+        current = protectEnd;
+    }
+    _success = true;
+    LOG_DBG("Protection completed");
+}
 
 memory::Protection::~Protection()
 {
-    for (auto& region : _regions)
-    {
-        DWORD temp;
-        VirtualProtect(region.start().to_ptr<void*>(), region.size(), region.oldProtect, &temp);
-    }
+    rollback();
+}
+
+bool memory::Protection::success() const
+{
+    return _success;
 }
 
 const std::vector<memory::ProtectedRegion>& memory::Protection::regions() const
 {
     return _regions;
+}
+
+void memory::Protection::rollback() noexcept
+{
+    LOG_DBG("Rolling back protection");
+
+    DWORD ignored {};
+    for (auto it = _regions.rbegin(); it != _regions.rend(); ++it)
+    {
+        VirtualProtect(it->range.start().to_ptr<void*>(), it->range.size(), it->oldProtect, &ignored);
+    }
+
+    _regions.clear();
 }

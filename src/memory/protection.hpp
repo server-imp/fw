@@ -18,14 +18,17 @@ namespace memory
     {
     private:
         std::vector<ProtectedRegion> _regions;
+        bool _success {};
+
+        void rollback() noexcept;
 
     public:
         Protection(const Handle& base, size_t size, DWORD protection);
-        Protection(const Range& range, DWORD protection);
-
         ~Protection();
         Protection(const Protection&)            = delete;
         Protection& operator=(const Protection&) = delete;
+
+        [[nodiscard]] bool success() const;
 
         [[nodiscard]] const std::vector<ProtectedRegion>& regions() const;
     };
