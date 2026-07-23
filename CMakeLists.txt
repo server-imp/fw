@@ -72,6 +72,7 @@ add_library(${PROJECT_NAME} STATIC
         src/memory/protection.cpp
         src/memory/range.cpp
         src/memory/scanner.cpp
+        src/memory/patch.cpp
 
         src/memory/hooks/d3d11.cpp
         src/memory/hooks/wndproc.cpp
