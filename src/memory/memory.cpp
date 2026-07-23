@@ -88,3 +88,37 @@ bool memory::locateAllPointers(
 
     return !results.empty();
 }
+
+bool memory::findFunctionStart(const Handle& instruction, Handle& result)
+{
+    const auto baseVA = reinterpret_cast<uintptr_t>(GetModuleHandleA(nullptr));
+    uintptr_t  va     = instruction.raw();
+    size_t     ccSeq  = 0;
+
+    while (va > baseVA)
+    {
+        --va;
+        const uint8_t b = *reinterpret_cast<uint8_t*>(va);
+
+        if (b == 0xCC && *reinterpret_cast<uint8_t*>(va - 1))
+        {
+            result = Handle(va + 1);
+            return true;
+        }
+
+        if (b == 0xCC)
+        {
+            if (++ccSeq >= 2)
+            {
+                result = Handle(va + ccSeq);
+                return true;
+            }
+        }
+        else
+        {
+            ccSeq = 0;
+        }
+    }
+
+    return false;
+}
