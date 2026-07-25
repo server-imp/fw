@@ -313,15 +313,9 @@ const std::filesystem::path& memory::Module::path()
     return _path;
 }
 
-bool memory::Module::findPattern(const std::string& pattern, Handle& result)
+bool memory::Module::findPattern(const std::vector<uint8_t>& data, const std::vector<uint8_t>& mask, Handle& result) const
 {
-    for (const auto& section : textSections())
-    {
-        if (Scanner::findPattern(pattern, section, result))
-            return true;
-    }
-
-    return false;
+    return Scanner::findPattern(*this, data, mask, result);
 }
 
 bool memory::Module::findString(const std::string& string, Handle& result)
