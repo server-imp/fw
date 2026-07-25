@@ -2,30 +2,11 @@
 #define FW_PATCH_HPP
 #include "handle.hpp"
 #include "module.hpp"
+#include "toggleable.hpp"
 
 namespace memory
 {
-    class Patch
-    {
-    protected:
-        std::string _name {};
-        bool        _enabled {};
-
-    public:
-        Patch() = default;
-        explicit Patch(std::string name);
-        virtual  ~Patch() = default;
-
-        [[nodiscard]] bool         enabled() const;
-        [[nodiscard]] virtual bool valid() const;
-
-        virtual bool enable();
-        virtual bool disable();
-    };
-
-    using PatchPtr = std::shared_ptr<Patch>;
-
-    class BytePatch : public Patch
+    class BytePatch : public Toggleable
     {
     protected:
         Handle _target {};
@@ -35,18 +16,19 @@ namespace memory
 
         bool _flushInstructionCache {};
 
+        bool internalEnable() override;
+        bool internalDisable() override;
+
     public:
-        explicit BytePatch(const std::string& name,
+        explicit BytePatch(
+            const std::string&                    name,
             const Handle&                         target,
             bool                                  flushInstructionCache,
             const std::initializer_list<uint8_t>& patchBytes
         );
 
-        bool enable() override;
-        bool disable() override;
-
         static std::shared_ptr<BytePatch> create(
-            const std::string&                           name,
+            const std::string&                    name,
             const Handle&                         target,
             bool                                  flushInstructionCache,
             const std::initializer_list<uint8_t>& patchBytes
@@ -57,32 +39,30 @@ namespace memory
     {
     public:
         explicit NopPatch(const std::string& name, const Handle& target, size_t size);
-        bool     enable() override;
-        bool     disable() override;
 
         static std::shared_ptr<NopPatch> create(const std::string& name, const Handle& target, size_t size);
     };
 
-    class RefNopPatch : public Patch
+    class RefNopPatch : public Toggleable
     {
     protected:
-        std::vector<PatchPtr> _patches {};
+        std::vector<PToggleable> _patches {};
+
+        bool internalEnable() override;
+        bool internalDisable() override;
 
     public:
-        explicit RefNopPatch(std::string name, Module& module, const Handle& target, RefData::Type refType);
-
-        bool enable() override;
-        bool disable() override;
+        explicit RefNopPatch(const std::string& name, Module& module, const Handle& target, RefData::Type refType);
 
         static std::shared_ptr<RefNopPatch> create(
-            const std::string&   name,
-            Module&       module,
-            const Handle& target,
-            RefData::Type refType
+            const std::string& name,
+            Module&            module,
+            const Handle&      target,
+            RefData::Type      refType
         );
     };
 
-    class StringRefPatch : public Patch
+    class StringRefPatch : public Toggleable
     {
     protected:
         bool _valid {};
@@ -92,14 +72,14 @@ namespace memory
         Handle _allocation {};
         size_t _allocationSize {};
 
+        bool internalEnable() override;
+        bool internalDisable() override;
+
     public:
         explicit StringRefPatch(std::string name, const RefData& ref);
 
         void setString(const std::string& string);
         void setWstring(const std::wstring& string);
-
-        bool enable() override;
-        bool disable() override;
 
         static std::shared_ptr<StringRefPatch> create(const std::string& name, const RefData& lea);
     };
