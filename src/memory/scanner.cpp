@@ -3,25 +3,33 @@
 #include "../logger.hpp"
 #include "util.hpp"
 
-bool memory::Scanner::findPattern(const std::string& pattern, const Range& range, Handle& result)
+bool memory::Scanner::findPattern(
+    const Range&                range,
+    const std::vector<uint8_t>& data,
+    const std::vector<uint8_t>& mask,
+    Handle&                     result
+)
 {
-    LOG_DBG(
-        "Looking for \"{}\" in range {:X}-{:X} [{:04X}]",
-        pattern,
-        range.start().raw(),
-        range.end().raw(),
-        range.size()
-    );
-    const auto  parsed = Pattern(pattern);
-    const auto& data   = parsed.data();
-    const auto& mask   = parsed.mask();
+    LOG_DBG("Looking for pattern in range {:X}-{:X} [{:04X}]", range.start().raw(), range.end().raw(), range.size());
 
     const size_t patternSize = data.size();
     const size_t rangeSize   = range.size();
 
-    if (patternSize == 0 || rangeSize < patternSize)
+    if (patternSize == 0)
     {
-        LOG_DBG("Invalid pattern");
+        LOG_DBG("Empty pattern");
+        return false;
+    }
+
+    if (rangeSize < patternSize)
+    {
+        LOG_DBG("Pattern exceeds memory range");
+        return false;
+    }
+
+    if (mask.size() != patternSize)
+    {
+        LOG_DBG("Mask size does not match pattern size");
         return false;
     }
 
@@ -30,15 +38,13 @@ bool memory::Scanner::findPattern(const std::string& pattern, const Range& range
 
     for (size_t i = 0; i <= stopAt; ++i)
     {
-        if (mask[0] && start[i] != data[0])
-        {
-            continue;
-        }
-
         bool match = true;
-        for (size_t j = 1; j < patternSize; ++j)
+        for (size_t j = 0; j < patternSize; ++j)
         {
-            if (mask[j] && start[i + j] != data[j])
+            if (!mask[j])
+                continue;
+
+            if (start[i + j] != data[j])
             {
                 match = false;
                 break;
@@ -47,7 +53,7 @@ bool memory::Scanner::findPattern(const std::string& pattern, const Range& range
 
         if (match)
         {
-            result = Handle(reinterpret_cast<uintptr_t>(start) + i);
+            result = range.start().add(static_cast<ptrdiff_t>(i));
             LOG_DBG("Found pattern at {:08X}", result.raw());
             return true;
         }
