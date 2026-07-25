@@ -63,6 +63,7 @@ add_library(${PROJECT_NAME} STATIC
         src/settings.cpp
         src/util.cpp
         src/bitset.cpp
+        src/toggleable.cpp
 
         src/memory/handle.cpp
         src/memory/hook.cpp
