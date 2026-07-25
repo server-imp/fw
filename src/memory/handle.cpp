@@ -88,6 +88,11 @@ bool memory::Handle::nop(const size_t size) const
     return true;
 }
 
+bool memory::Handle::null() const
+{
+    return _pointer == 0;
+}
+
 bool memory::Handle::operator==(const Handle& other) const noexcept
 {
     return _pointer == other._pointer;

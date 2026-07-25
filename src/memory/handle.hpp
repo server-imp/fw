@@ -36,6 +36,8 @@ namespace memory
 
         [[nodiscard]] bool nop(size_t size = 1) const;
 
+        [[nodiscard]] bool null() const;
+
         template <typename T>
         std::enable_if_t<std::is_pointer_v<T>, T> to_ptr() const
         {
