@@ -54,7 +54,7 @@ bool memory::Scanner::findPattern(
         if (match)
         {
             result = range.start().add(static_cast<ptrdiff_t>(i));
-            LOG_DBG("Found pattern at {:08X}", result.raw());
+            LOG_DBG("Found pattern at {}", result.formatted());
             return true;
         }
     }
@@ -97,7 +97,7 @@ bool memory::Scanner::findString(const std::string& string, const Range& range, 
             if (match)
             {
                 result = Handle(reinterpret_cast<uintptr_t>(start) + i);
-                LOG_DBG("Found string at {:08X}", result.raw());
+                LOG_DBG("Found string at {}", result.formatted());
                 return true;
             }
         }
@@ -141,7 +141,7 @@ bool memory::Scanner::findWstring(const std::wstring& string, const Range& range
             if (match)
             {
                 result = Handle(start + i);
-                LOG_DBG("Found string at {:08X}", result.raw());
+                LOG_DBG("Found string at {}", result.formatted());
                 return true;
             }
         }
@@ -206,7 +206,7 @@ bool memory::Scanner::findWstringReference(const std::wstring& string, Handle& r
             if (const int32_t disp = *reinterpret_cast<const int32_t*>(insn + 3); insn + 7 + disp == strAddr)
             {
                 result = Handle(const_cast<uint8_t*>(insn));
-                LOG_DBG("Found reference at {:08X}", result.raw());
+                LOG_DBG("Found reference at {}", result.formatted());
                 return true;
             }
         }

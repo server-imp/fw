@@ -201,20 +201,12 @@ void memory::Module::initSections()
         if (memcmp(section->Name, ".text", 5) == 0)
         {
             _textSections.emplace_back(Handle(secBase), secSize);
-            LOG_DBG(
-                "Found text section at {:08X}-{:08X}",
-                _textSections.back().start().raw(),
-                _textSections.back().end().raw()
-            );
+            LOG_DBG("Text section at {} [{:X}]", _textSections.back().start().formatted(), _textSections.back().size());
         }
         else if (memcmp(section->Name, ".rdata", 6) == 0 || memcmp(section->Name, ".data", 5) == 0)
         {
             _dataSections.emplace_back(Handle(secBase), secSize);
-            LOG_DBG(
-                "Found data section at {:08X}-{:08X}",
-                _dataSections.back().start().raw(),
-                _dataSections.back().end().raw()
-            );
+            LOG_DBG("Data section at {} [{:X}]", _dataSections.back().start().formatted(), _dataSections.back().size());
         }
     }
 
@@ -313,7 +305,11 @@ const std::filesystem::path& memory::Module::path()
     return _path;
 }
 
-bool memory::Module::findPattern(const std::vector<uint8_t>& data, const std::vector<uint8_t>& mask, Handle& result) const
+bool memory::Module::findPattern(
+    const std::vector<uint8_t>& data,
+    const std::vector<uint8_t>& mask,
+    Handle&                     result
+) const
 {
     return Scanner::findPattern(*this, data, mask, result);
 }
@@ -360,7 +356,7 @@ bool memory::Module::findReferences(
     const int             max
 )
 {
-    LOG_DBG("Looking for references to {:08X} [{}]", handle.raw(), RefData::typeToString(type));
+    LOG_DBG("Looking for references to {} [{}]", handle.formatted(), RefData::typeToString(type));
 
     results.clear();
 
@@ -672,7 +668,7 @@ memory::Module memory::Module::getByName(const std::string& name)
 
 bool memory::Module::tryGetByAddr(const Handle& addr, Module& result)
 {
-    if (!addr.raw())
+    if (addr.null())
     {
         return false;
     }

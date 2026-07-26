@@ -20,7 +20,7 @@ ptrdiff_t memory::ProtectedRegion::size() const
 
 memory::Protection::Protection(const Handle& base, const size_t size, const DWORD protection)
 {
-    LOG_DBG("Protecting {:08X}+{:04X} [{:08X}]", base.raw(), size, protection);
+    LOG_DBG("Protecting {}+{:X} [{:08X}]", base.formatted(), size, protection);
 
     if (!base.raw() || !size)
     {

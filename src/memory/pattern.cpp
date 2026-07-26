@@ -244,6 +244,6 @@ bool memory::Pattern::resolve(const Range& range, Handle& result)
     result    = _result;
     _resolved = true;
 
-    LOG_INFO("Resolved \"{}\" => {:08X}", _name, _result.raw());
+    LOG_INFO("Resolved \"{}\" => {}", _name, _result.formatted());
     return true;
 }
