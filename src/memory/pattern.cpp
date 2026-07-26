@@ -7,10 +7,7 @@
 #include "../logger.hpp"
 #include "util.hpp"
 
-memory::PatternTransform::PatternTransform(
-    const PatternTransformType type,
-    const intptr_t             value
-) : type(type), value(value) {}
+memory::PatternTransform::PatternTransform(const Type type, const intptr_t value) : type(type), value(value) {}
 
 std::string memory::PatternTransform::toString() const
 {
@@ -18,17 +15,19 @@ std::string memory::PatternTransform::toString() const
 
     switch (this->type)
     {
-    case PatternTransformType::Add: typeString = "Add";
+    case Type::Add: typeString = "Add";
         break;
-    case PatternTransformType::Subtract: typeString = "Subtract";
+    case Type::Subtract: typeString = "Subtract";
         break;
-    case PatternTransformType::Dereference: typeString = "Dereference";
+    case Type::Dereference: typeString = "Dereference";
         break;
-    case PatternTransformType::RipRelative: typeString = "RipRelative";
+    case Type::RipRelative: typeString = "RipRelative";
         break;
-    case PatternTransformType::Match: typeString = "Match";
+    case Type::Match: typeString = "Match";
         break;
-    case PatternTransformType::Callback: typeString = "Callback";
+    case Type::RelCall: typeString = "RelCall";
+        break;
+    case Type::Callback: typeString = "Callback";
         break;
     }
 
@@ -97,37 +96,43 @@ bool memory::Pattern::resolved() const
 
 memory::Pattern& memory::Pattern::add(ptrdiff_t offset)
 {
-    _transforms.emplace_back(PatternTransformType::Add, offset);
+    _transforms.emplace_back(PatternTransform::Type::Add, offset);
     return *this;
 }
 
 memory::Pattern& memory::Pattern::subtract(ptrdiff_t offset)
 {
-    _transforms.emplace_back(PatternTransformType::Subtract, offset);
+    _transforms.emplace_back(PatternTransform::Type::Subtract, offset);
     return *this;
 }
 
 memory::Pattern& memory::Pattern::dereference()
 {
-    _transforms.emplace_back(PatternTransformType::Dereference, 0);
+    _transforms.emplace_back(PatternTransform::Type::Dereference, 0);
     return *this;
 }
 
 memory::Pattern& memory::Pattern::rip()
 {
-    _transforms.emplace_back(PatternTransformType::RipRelative, 0);
+    _transforms.emplace_back(PatternTransform::Type::RipRelative, 0);
+    return *this;
+}
+
+memory::Pattern& memory::Pattern::relCall()
+{
+    _transforms.emplace_back(PatternTransform::Type::RelCall, 0);
     return *this;
 }
 
 memory::Pattern& memory::Pattern::match(intptr_t byte)
 {
-    _transforms.emplace_back(PatternTransformType::Match, byte);
+    _transforms.emplace_back(PatternTransform::Type::Match, byte);
     return *this;
 }
 
 memory::Pattern& memory::Pattern::callback(const Callback& callback)
 {
-    _transforms.emplace_back(PatternTransformType::Callback, _callbacks.size());
+    _transforms.emplace_back(PatternTransform::Type::Callback, _callbacks.size());
     _callbacks.emplace_back(callback);
     return *this;
 }
@@ -166,31 +171,31 @@ bool memory::Pattern::resolve(const Range& range, Handle& result)
     {
         const auto& transform = _transforms[i];
 
-        if (transform.type == PatternTransformType::Add)
+        if (transform.type == PatternTransform::Type::Add)
         {
             pointer = pointer.add(transform.value);
             continue;
         }
 
-        if (transform.type == PatternTransformType::Subtract)
+        if (transform.type == PatternTransform::Type::Subtract)
         {
             pointer = pointer.sub(transform.value);
             continue;
         }
 
-        if (transform.type == PatternTransformType::Dereference)
+        if (transform.type == PatternTransform::Type::Dereference)
         {
             pointer = Handle(*pointer.to_ptr<uintptr_t*>());
             continue;
         }
 
-        if (transform.type == PatternTransformType::RipRelative)
+        if (transform.type == PatternTransform::Type::RipRelative)
         {
             pointer = pointer.rip();
             continue;
         }
 
-        if (transform.type == PatternTransformType::Match)
+        if (transform.type == PatternTransform::Type::Match)
         {
             const auto byte  = pointer.deref<uint8_t>();
             const auto check = static_cast<uint8_t>(transform.value);
@@ -207,7 +212,24 @@ bool memory::Pattern::resolve(const Range& range, Handle& result)
             }
         }
 
-        if (transform.type == PatternTransformType::Callback)
+        if (transform.type == PatternTransform::Type::RelCall)
+        {
+            if (pointer.deref<uint8_t>() != 0xE8)
+            {
+                LOG_WARN(
+                    "Transform number {} \"{}\" failed: {:02X} != 0xE8",
+                    i + 1,
+                    transform.toString(),
+                    pointer.deref<uint8_t>()
+                );
+                return false;
+            }
+
+            pointer = pointer.resolve_relative_call();
+            continue;
+        }
+
+        if (transform.type == PatternTransform::Type::Callback)
         {
             if (!_callbacks[transform.value](pointer))
             {

@@ -8,22 +8,23 @@
 
 namespace memory
 {
-    enum class PatternTransformType
-    {
-        Add,
-        Subtract,
-        Dereference,
-        RipRelative,
-        Match,
-        Callback
-    };
-
     struct PatternTransform
     {
-        PatternTransformType type;
+        enum class Type
+        {
+            Add,
+            Subtract,
+            Dereference,
+            RipRelative,
+            Match,
+            RelCall,
+            Callback
+        };
+
+        Type type;
         intptr_t             value;
 
-        explicit PatternTransform(PatternTransformType type, intptr_t value);
+        explicit PatternTransform(Type type, intptr_t value);
 
         [[nodiscard]] std::string toString() const;
     };
@@ -64,6 +65,7 @@ namespace memory
         Pattern& subtract(ptrdiff_t offset);
         Pattern& dereference();
         Pattern& rip();
+        Pattern& relCall();
         Pattern& match(intptr_t byte);
         Pattern& callback(const Callback& callback);
 
