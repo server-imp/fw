@@ -2,10 +2,17 @@
 
 memory::hooks::WndProc* memory::hooks::WndProc::_instance {};
 
-memory::hooks::WndProc::WndProc(HWND hWnd) : Hook("WndProc", nullptr, nullptr, nullptr)
+memory::hooks::WndProc::WndProc(HWND hWnd) : Hook("WndProc Hook", nullptr, nullptr, nullptr)
 {
     _instance = this;
     _hWnd     = hWnd;
+}
+
+memory::hooks::WndProc::~WndProc()
+{
+    if (enabled())
+        disable();
+    _instance = nullptr;
 }
 
 bool memory::hooks::WndProc::internalEnable()

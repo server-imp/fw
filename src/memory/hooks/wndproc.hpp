@@ -21,6 +21,8 @@ namespace memory::hooks
     public:
         explicit WndProc(HWND hWnd);
 
+        ~WndProc() override;
+
         void addCallback(const std::function<uintptr_t(HWND, UINT, WPARAM, LPARAM)>& callback);
 
     private:

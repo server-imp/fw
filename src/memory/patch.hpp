@@ -27,6 +27,8 @@ namespace memory
             const std::initializer_list<uint8_t>& patchBytes
         );
 
+        ~BytePatch() override;
+
         static std::shared_ptr<BytePatch> create(
             const std::string&                    name,
             const Handle&                         target,
@@ -54,6 +56,8 @@ namespace memory
     public:
         explicit RefNopPatch(const std::string& name, Module& module, const Handle& target, RefData::Type refType);
 
+        ~RefNopPatch() override;
+
         static std::shared_ptr<RefNopPatch> create(
             const std::string& name,
             Module&            module,
@@ -77,6 +81,8 @@ namespace memory
 
     public:
         explicit StringRefPatch(std::string name, const RefData& ref);
+
+        ~StringRefPatch() override;
 
         void setString(const std::string& string);
         void setWstring(const std::wstring& string);

@@ -10,6 +10,12 @@ memory::BytePatch::BytePatch(
     const std::initializer_list<uint8_t>& patchBytes
 ) : Toggleable(name), _target(target), _patched(patchBytes), _flushInstructionCache(flushInstructionCache) {}
 
+memory::BytePatch::~BytePatch()
+{
+    if (enabled())
+        disable();
+}
+
 bool memory::BytePatch::internalEnable()
 {
     if (_patched.empty())
@@ -106,10 +112,16 @@ memory::RefNopPatch::RefNopPatch(
     for (const auto& ref : refs)
     {
         _patches.push_back(
-            NopPatch::create(fmt::format("{}_{}", this->name(), count), ref.instruction(), ref.instructionLength())
+            NopPatch::create(fmt::format("{}[{}]", this->name(), count), ref.instruction(), ref.instructionLength())
         );
         ++count;
     }
+}
+
+memory::RefNopPatch::~RefNopPatch()
+{
+    if (enabled())
+        disable();
 }
 
 bool memory::RefNopPatch::internalEnable()
@@ -205,6 +217,12 @@ memory::StringRefPatch::StringRefPatch(std::string name, const RefData& ref) : T
 {
     _lea            = ref.instruction();
     _originalString = ref.reference();
+}
+
+memory::StringRefPatch::~StringRefPatch()
+{
+    if (enabled())
+        disable();
 }
 
 void memory::StringRefPatch::setString(const std::string& string)

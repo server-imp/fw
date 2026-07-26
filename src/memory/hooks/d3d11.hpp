@@ -49,6 +49,8 @@ namespace memory::hooks
         bool internalDisable() override;
 
     public:
+        ~D3D11() override;
+
         [[nodiscard]] ID3D11Device* device() const;
 
         [[nodiscard]] ID3D11DeviceContext* context() const;

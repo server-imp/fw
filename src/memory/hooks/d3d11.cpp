@@ -24,13 +24,13 @@ memory::hooks::D3D11::D3D11(
     const std::function<void(D3D11*, bool)>& cbResizeBuffers,
     const std::function<bool(D3D11*)>&       cbStarted,
     const std::function<void(D3D11*)>&       cbShutdown
-) : Hook("D3D11", nullptr, nullptr, nullptr), _cbPresent(cbPresent), _cbResizeBuffers(cbResizeBuffers), _cbStarted(cbStarted),
+) : Hook("D3D11 Hook", nullptr, nullptr, nullptr), _cbPresent(cbPresent), _cbResizeBuffers(cbResizeBuffers), _cbStarted(cbStarted),
     _cbShutdown(cbShutdown), _presentPtr(presentPtr), _resizeBuffersPtr(resizeBuffersPtr), _hWnd(hWnd)
 {
     _instance = this;
 
-    _hkPresent.emplace("D3D11Present", presentPtr, reinterpret_cast<void*>(present));
-    _hkResizeBuffers.emplace("D3D11ResizeBuffers", resizeBuffersPtr, reinterpret_cast<void*>(resizeBuffers));
+    _hkPresent.emplace("D3D11Present Hook", presentPtr, reinterpret_cast<void*>(present));
+    _hkResizeBuffers.emplace("D3D11ResizeBuffers Hook", resizeBuffersPtr, reinterpret_cast<void*>(resizeBuffers));
 }
 
 bool memory::hooks::D3D11::internalEnable()
@@ -80,6 +80,13 @@ bool memory::hooks::D3D11::internalDisable()
     safeRelease(_pContext);
     safeRelease(_pDevice);
     return true;
+}
+
+memory::hooks::D3D11::~D3D11()
+{
+    if (enabled())
+        disable();
+    _instance = nullptr;
 }
 
 ID3D11Device* memory::hooks::D3D11::device() const
