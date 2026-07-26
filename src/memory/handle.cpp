@@ -93,6 +93,11 @@ bool memory::Handle::null() const
     return _pointer == 0;
 }
 
+const std::string& memory::Handle::formatted() const
+{
+    return format(*this);
+}
+
 bool memory::Handle::operator==(const Handle& other) const noexcept
 {
     return _pointer == other._pointer;
@@ -151,4 +156,25 @@ bool memory::Handle::operator>=(const Handle& other) const noexcept
 bool memory::Handle::operator>=(const uintptr_t other) const noexcept
 {
     return _pointer >= other;
+}
+
+static std::unordered_map<uintptr_t, std::string> formattedHandles;
+const std::string& memory::Handle::format(const Handle& handle)
+{
+    if (const auto find = formattedHandles.find(handle.raw()); find != formattedHandles.end())
+    {
+        return find->second;
+    }
+
+    std::string result;
+    if (Module module {}; Module::tryGetByAddr(handle, module))
+    {
+        result = fmt::format("{}+{:X}", module.name(), handle.sub(module.start()).raw());
+    }
+    else
+    {
+        result = fmt::format("{:08X}", handle.raw());
+    }
+
+    return formattedHandles.emplace(handle.raw(), result).first->second;
 }

@@ -38,6 +38,8 @@ namespace memory
 
         [[nodiscard]] bool null() const;
 
+        const std::string& formatted() const;
+
         template <typename T>
         std::enable_if_t<std::is_pointer_v<T>, T> to_ptr() const
         {
@@ -73,6 +75,8 @@ namespace memory
         bool operator>=(const Handle& other) const noexcept;
 
         bool operator>=(uintptr_t other) const noexcept;
+
+        static const std::string& format(const Handle& handle);
     };
 }
 
