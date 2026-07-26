@@ -7,7 +7,7 @@
 #include "../logger.hpp"
 #include "util.hpp"
 
-memory::Hook::Hook(std::string name, void* target, void* original, void* ownFunction) : _name(std::move(name)),
+memory::Hook::Hook(std::string name, void* target, void* original, void* ownFunction) : Toggleable(std::move(name)),
     _target(target), _original(original), _ownFunction(ownFunction)
 {
     const auto  from = Handle(_target);
@@ -34,17 +34,7 @@ memory::Hook::Hook(std::string name, void* target, void* original, void* ownFunc
         toStr = fmt::format("{:08X}", to.raw());
     }
 
-    LOG_DBG("Created hook \"{}\" {} -> {}", _name, fromStr, toStr);
-}
-
-const std::string& memory::Hook::name() const
-{
-    return _name;
-}
-
-bool memory::Hook::enabled() const
-{
-    return _enabled;
+    LOG_DBG("Created hook \"{}\" {} -> {}", this->name(), fromStr, toStr);
 }
 
 void* memory::Hook::target() const
@@ -59,16 +49,8 @@ memory::Detour::Detour(std::string name, void* target, void* ownFunction) : Hook
     ownFunction
 ) {}
 
-bool memory::Detour::enable()
+bool memory::Detour::internalEnable()
 {
-    LOG_DBG("Enabling \"{}\"", _name);
-
-    if (_enabled)
-    {
-        LOG_DBG("Already enabled");
-        return false;
-    }
-
     auto status = MH_Initialize();
     if (status != MH_OK && status != MH_ERROR_ALREADY_INITIALIZED)
     {
@@ -90,20 +72,11 @@ bool memory::Detour::enable()
         return false;
     }
 
-    LOG_DBG("Enabled \"{}\"", _name);
-    _enabled = true;
     return true;
 }
 
-bool memory::Detour::disable(const bool uninitialize)
+bool memory::Detour::internalDisable()
 {
-    LOG_DBG("Disabling \"{}\"", _name);
-    if (!_enabled)
-    {
-        LOG_DBG("Already disabled");
-        return false;
-    }
-
     auto status = MH_Initialize();
     if (status != MH_OK && status != MH_ERROR_ALREADY_INITIALIZED)
     {
@@ -118,18 +91,6 @@ bool memory::Detour::disable(const bool uninitialize)
         return false;
     }
 
-    if (uninitialize)
-    {
-        status = MH_Uninitialize();
-        if (status != MH_OK)
-        {
-            LOG_DBG("MH_Uninitialize failed: {}", MH_StatusToString(status));
-            return false;
-        }
-    }
-
-    LOG_DBG("Disabled \"{}\"", _name);
-    _enabled = false;
     return true;
 }
 

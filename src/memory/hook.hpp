@@ -3,38 +3,28 @@
 #pragma once
 
 #include "pch.hpp"
+#include "toggleable.hpp"
 
 namespace memory
 {
-    class Hook
+    class Hook : public Toggleable
     {
     protected:
-        std::string _name {};
-
-        bool _enabled {};
-
         void* _target {};
         void* _original {};
         void* _ownFunction {};
 
         Hook(std::string name, void* target, void* original, void* ownFunction);
 
-        ~Hook() = default;
-
     public:
-        [[nodiscard]] const std::string& name() const;
-
-        [[nodiscard]] bool enabled() const;
 
         [[nodiscard]] void* target() const;
 
         template <typename T>
         T original() const;
-
-        virtual bool enable() = 0;
-
-        virtual bool disable(bool uninitialize) = 0;
     };
+
+    using PHook = std::shared_ptr<Hook>;
 
     template <typename T>
     T Hook::original() const
@@ -47,9 +37,9 @@ namespace memory
     public:
         Detour(std::string name, void* target, void* ownFunction);
 
-        virtual bool enable();
-
-        virtual bool disable(bool uninitialize);
+    protected:
+        bool internalEnable() override;
+        bool internalDisable() override;
     };
 
     struct HookScope

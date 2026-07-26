@@ -33,16 +33,7 @@ memory::hooks::D3D11::D3D11(
     _hkResizeBuffers.emplace("D3D11ResizeBuffers", resizeBuffersPtr, reinterpret_cast<void*>(resizeBuffers));
 }
 
-memory::hooks::D3D11::~D3D11()
-{
-    disable(false);
-    if (_instance == this)
-    {
-        _instance = nullptr;
-    }
-}
-
-bool memory::hooks::D3D11::enable()
+bool memory::hooks::D3D11::internalEnable()
 {
     _shuttingDown = false;
 
@@ -52,15 +43,14 @@ bool memory::hooks::D3D11::enable()
     }
     if (!_hkResizeBuffers || !_hkResizeBuffers->enable())
     {
-        _hkPresent->disable(false);
+        _hkPresent->disable();
         return false;
     }
 
-    _enabled = true;
     return true;
 }
 
-bool memory::hooks::D3D11::disable(bool uninitialize)
+bool memory::hooks::D3D11::internalDisable()
 {
     _shuttingDown.store(true, std::memory_order_release);
 
@@ -71,7 +61,7 @@ bool memory::hooks::D3D11::disable(bool uninitialize)
 
     if (_hkPresent->enabled())
     {
-        _hkPresent->disable(false);
+        _hkPresent->disable();
         while (_presentInFlight.load(std::memory_order_acquire) != 0)
         {
             std::this_thread::sleep_for(std::chrono::milliseconds(1));
@@ -79,7 +69,7 @@ bool memory::hooks::D3D11::disable(bool uninitialize)
     }
     if (_hkResizeBuffers->enabled())
     {
-        _hkResizeBuffers->disable(false);
+        _hkResizeBuffers->disable();
         while (_resizeBuffersInFlight.load(std::memory_order_acquire) != 0)
         {
             std::this_thread::sleep_for(std::chrono::milliseconds(1));
@@ -89,8 +79,6 @@ bool memory::hooks::D3D11::disable(bool uninitialize)
     destroyRenderTarget();
     safeRelease(_pContext);
     safeRelease(_pDevice);
-
-    _enabled = false;
     return true;
 }
 

@@ -5,7 +5,7 @@
 
 namespace memory::hooks
 {
-    class D3D11 final : Hook
+    class D3D11 final : public Hook
     {
     private:
         static D3D11* _instance;
@@ -44,13 +44,11 @@ namespace memory::hooks
         std::atomic_uint32_t _presentInFlight {};
         std::atomic_uint32_t _resizeBuffersInFlight {};
 
+    protected:
+        bool internalEnable() override;
+        bool internalDisable() override;
+
     public:
-        ~D3D11();
-
-        virtual bool enable();
-
-        virtual bool disable(bool uninitialize);
-
         [[nodiscard]] ID3D11Device* device() const;
 
         [[nodiscard]] ID3D11DeviceContext* context() const;

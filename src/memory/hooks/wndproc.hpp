@@ -5,7 +5,7 @@
 
 namespace memory::hooks
 {
-    class WndProc final : Hook
+    class WndProc final : public Hook
     {
     private:
         static WndProc* _instance;
@@ -14,14 +14,12 @@ namespace memory::hooks
 
         std::vector<std::function<uintptr_t(HWND, UINT, WPARAM, LPARAM)>> _callbacks {};
 
+    protected:
+        bool internalEnable() override;
+        bool internalDisable() override;
+
     public:
         explicit WndProc(HWND hWnd);
-
-        ~WndProc();
-
-        virtual bool enable();
-
-        virtual bool disable(bool uninitialize);
 
         void addCallback(const std::function<uintptr_t(HWND, UINT, WPARAM, LPARAM)>& callback);
 
