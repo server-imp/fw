@@ -37,6 +37,8 @@ namespace memory
     public:
         Detour(std::string name, void* target, void* ownFunction);
 
+        ~Detour() override;
+
     protected:
         bool internalEnable() override;
         bool internalDisable() override;
