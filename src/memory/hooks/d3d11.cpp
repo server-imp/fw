@@ -17,15 +17,21 @@ static void safeRelease(T*& p)
 }
 
 memory::hooks::D3D11::D3D11(
-    HWND                                     hWnd,
-    void*                                    presentPtr,
-    void*                                    resizeBuffersPtr,
-    const std::function<void()>&             cbPresent,
-    const std::function<void(D3D11*, bool)>& cbResizeBuffers,
-    const std::function<bool(D3D11*)>&       cbStarted,
-    const std::function<void(D3D11*)>&       cbShutdown
-) : Hook("D3D11 Hook", nullptr, nullptr, nullptr), _cbPresent(cbPresent), _cbResizeBuffers(cbResizeBuffers), _cbStarted(cbStarted),
-    _cbShutdown(cbShutdown), _presentPtr(presentPtr), _resizeBuffersPtr(resizeBuffersPtr), _hWnd(hWnd)
+    HWND                                      hWnd,
+    void*                                     presentPtr,
+    void*                                     resizeBuffersPtr,
+    const std::function<void()>&              cbPresent,
+    const std::function<void(D3D11 *, bool)>& cbResizeBuffers,
+    const std::function<bool(D3D11 *)>&       cbStarted,
+    const std::function<void(D3D11 *)>&       cbShutdown)
+    : Hook("D3D11 Hook", nullptr, nullptr, nullptr),
+      _cbPresent(cbPresent),
+      _cbResizeBuffers(cbResizeBuffers),
+      _cbStarted(cbStarted),
+      _cbShutdown(cbShutdown),
+      _presentPtr(presentPtr),
+      _resizeBuffersPtr(resizeBuffersPtr),
+      _hWnd(hWnd)
 {
     _instance = this;
 
@@ -110,13 +116,12 @@ HWND memory::hooks::D3D11::hWnd() const
 }
 
 std::optional<std::unique_ptr<memory::hooks::D3D11>> memory::hooks::D3D11::create(
-    const std::string&                       windowClassName,
-    const std::string&                       windowName,
-    const std::function<void()>&             cbPresent,
-    const std::function<void(D3D11*, bool)>& cbResizeBuffers,
-    const std::function<bool(D3D11*)>&       cbStarted,
-    const std::function<void(D3D11*)>&       cbShutdown
-)
+    const std::string&                        windowClassName,
+    const std::string&                        windowName,
+    const std::function<void()>&              cbPresent,
+    const std::function<void(D3D11 *, bool)>& cbResizeBuffers,
+    const std::function<bool(D3D11 *)>&       cbStarted,
+    const std::function<void(D3D11 *)>&       cbShutdown)
 {
     if (_instance)
     {
@@ -126,8 +131,7 @@ std::optional<std::unique_ptr<memory::hooks::D3D11>> memory::hooks::D3D11::creat
 
     const auto hWnd = FindWindow(
         windowClassName.empty() ? nullptr : windowClassName.c_str(),
-        windowName.empty() ? nullptr : windowName.c_str()
-    );
+        windowName.empty() ? nullptr : windowName.c_str());
     if (!hWnd)
     {
         LOG_ERR("FindWindow failed: [{}], \"{}\", \"{}\"", GetLastError(), windowClassName, windowName);
@@ -163,8 +167,7 @@ std::optional<std::unique_ptr<memory::hooks::D3D11>> memory::hooks::D3D11::creat
             nullptr,
             nullptr,
             wc.hInstance,
-            nullptr
-        );
+            nullptr);
 
         if (!dummyWnd)
         {
@@ -200,8 +203,7 @@ std::optional<std::unique_ptr<memory::hooks::D3D11>> memory::hooks::D3D11::creat
             &tempSwap,
             &tempDev,
             nullptr,
-            &tempCtx
-        );
+            &tempCtx);
 
         if (FAILED(hr) || !tempSwap)
         {
@@ -238,9 +240,14 @@ std::optional<std::unique_ptr<memory::hooks::D3D11>> memory::hooks::D3D11::creat
         UnregisterClass(wc.lpszClassName, wc.hInstance);
     }
 
-    return std::unique_ptr<D3D11>(
-        new D3D11(hWnd, _presentPtr, _resizeBuffersPtr, cbPresent, cbResizeBuffers, cbStarted, cbShutdown)
-    );
+    return std::unique_ptr < D3D11 > (new D3D11(
+        hWnd,
+        _presentPtr,
+        _resizeBuffersPtr,
+        cbPresent,
+        cbResizeBuffers,
+        cbStarted,
+        cbShutdown));
 }
 
 bool memory::hooks::D3D11::createRenderTarget(IDXGISwapChain* swapChain)
@@ -275,8 +282,7 @@ bool memory::hooks::D3D11::createRenderTarget(IDXGISwapChain* swapChain)
     {
         vp.Width  = static_cast<float>(sd.BufferDesc.Width);
         vp.Height = static_cast<float>(sd.BufferDesc.Height);
-    }
-    else
+    } else
     {
         D3D11_TEXTURE2D_DESC td {};
         ID3D11Texture2D*     tex = nullptr;
@@ -351,8 +357,7 @@ HRESULT memory::hooks::D3D11::internalResizeBuffers(
     const UINT        width,
     const UINT        height,
     const DXGI_FORMAT newFormat,
-    const UINT        swapChainFlags
-)
+    const UINT        swapChainFlags)
 {
     HookScope scope(_resizeBuffersInFlight);
 
@@ -364,8 +369,7 @@ HRESULT memory::hooks::D3D11::internalResizeBuffers(
             width,
             height,
             newFormat,
-            swapChainFlags
-        );
+            swapChainFlags);
     }
 
     if (_cbResizeBuffers)
@@ -381,8 +385,7 @@ HRESULT memory::hooks::D3D11::internalResizeBuffers(
         width,
         height,
         newFormat,
-        swapChainFlags
-    );
+        swapChainFlags);
     if (FAILED(result))
     {
         LOG_ERR("Original ResizeBuffers failed");
@@ -402,8 +405,7 @@ HRESULT memory::hooks::D3D11::internalResizeBuffers(
         safeRelease(_pDevice);
         _pDevice = dev;
         _pDevice->GetImmediateContext(&_pContext);
-    }
-    else
+    } else
     {
         dev->Release();
     }
@@ -432,8 +434,7 @@ HRESULT memory::hooks::D3D11::resizeBuffers(
     const UINT        width,
     const UINT        height,
     const DXGI_FORMAT newFormat,
-    const UINT        swapChainFlags
-)
+    const UINT        swapChainFlags)
 {
     return _instance->internalResizeBuffers(swapChain, bufferCount, width, height, newFormat, swapChainFlags);
 }

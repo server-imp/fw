@@ -20,8 +20,7 @@ namespace memory
         const Handle&        base,
         size_t               largestOffset,
         const Handle&        target,
-        std::vector<Handle>& results
-    );
+        std::vector<Handle>& results);
 
     // hacky way to find the start of a function if it is preceded by at least two int3's or an int3 and a ret
     bool findFunctionStart(const Handle& instruction, Handle& result);

@@ -15,20 +15,27 @@ std::string memory::PatternTransform::toString() const
 
     switch (this->type)
     {
-    case Type::Add: typeString = "Add";
-        break;
-    case Type::Subtract: typeString = "Subtract";
-        break;
-    case Type::Dereference: typeString = "Dereference";
-        break;
-    case Type::RipRelative: typeString = "RipRelative";
-        break;
-    case Type::Match: typeString = "Match";
-        break;
-    case Type::RelCall: typeString = "RelCall";
-        break;
-    case Type::Callback: typeString = "Callback";
-        break;
+        case Type::Add:
+            typeString = "Add";
+            break;
+        case Type::Subtract:
+            typeString = "Subtract";
+            break;
+        case Type::Dereference:
+            typeString = "Dereference";
+            break;
+        case Type::RipRelative:
+            typeString = "RipRelative";
+            break;
+        case Type::Match:
+            typeString = "Match";
+            break;
+        case Type::RelCall:
+            typeString = "RelCall";
+            break;
+        case Type::Callback:
+            typeString = "Callback";
+            break;
     }
 
     return fmt::format("{} [{:X}]", typeString, value);
@@ -45,8 +52,7 @@ void memory::Pattern::parseIda(const std::string& ida, std::vector<uint8_t>& dat
         {
             data.push_back(0x00);
             mask.push_back(0x00);
-        }
-        else
+        } else
         {
             data.push_back(static_cast<uint8_t>(std::stoul(token, nullptr, 16)));
             mask.push_back(0xFF);
@@ -202,8 +208,7 @@ bool memory::Pattern::resolve(const Range& range, Handle& result)
                     i + 1,
                     transform.toString(),
                     byte,
-                    check
-                );
+                    check);
                 return false;
             }
         }
@@ -216,8 +221,7 @@ bool memory::Pattern::resolve(const Range& range, Handle& result)
                     "Transform number {} \"{}\" failed: {:02X} != 0xE8",
                     i + 1,
                     transform.toString(),
-                    pointer.deref<uint8_t>()
-                );
+                    pointer.deref<uint8_t>());
                 return false;
             }
 

@@ -7,11 +7,11 @@
 #include "../logger.hpp"
 #include "util.hpp"
 
-memory::Hook::Hook(std::string name, void* target, void* original, void* ownFunction) : Toggleable(std::move(name)),
-    _target(target), _original(original), _ownFunction(ownFunction)
+memory::Hook::Hook(std::string name, void* target, void* original, void* ownFunction)
+    : Toggleable(std::move(name)), _target(target), _original(original), _ownFunction(ownFunction)
 {
-    const auto  from    = Handle(_target);
-    const auto  to      = Handle(_ownFunction);
+    const auto from = Handle(_target);
+    const auto to   = Handle(_ownFunction);
 
     LOG_DBG("Created hook \"{}\" {} -> {}", this->name(), from.formatted(), to.formatted());
 }
@@ -21,12 +21,8 @@ void* memory::Hook::target() const
     return _target;
 }
 
-memory::Detour::Detour(std::string name, void* target, void* ownFunction) : Hook(
-    std::move(name),
-    target,
-    nullptr,
-    ownFunction
-) {}
+memory::Detour::Detour(std::string name, void* target, void* ownFunction)
+    : Hook(std::move(name), target, nullptr, ownFunction) {}
 
 memory::Detour::~Detour()
 {

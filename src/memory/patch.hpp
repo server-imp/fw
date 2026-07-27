@@ -24,8 +24,7 @@ namespace memory
             const std::string&                    name,
             const Handle&                         target,
             bool                                  flushInstructionCache,
-            const std::initializer_list<uint8_t>& patchBytes
-        );
+            const std::initializer_list<uint8_t>& patchBytes);
 
         ~BytePatch() override;
 
@@ -33,8 +32,7 @@ namespace memory
             const std::string&                    name,
             const Handle&                         target,
             bool                                  flushInstructionCache,
-            const std::initializer_list<uint8_t>& patchBytes
-        );
+            const std::initializer_list<uint8_t>& patchBytes);
     };
 
     class NopPatch : public BytePatch
@@ -62,8 +60,7 @@ namespace memory
             const std::string& name,
             Module&            module,
             const Handle&      target,
-            RefData::Type      refType
-        );
+            RefData::Type      refType);
     };
 
     class StringRefPatch : public Toggleable

@@ -18,7 +18,7 @@ namespace memory
     {
     private:
         std::vector<ProtectedRegion> _regions;
-        bool _success {};
+        bool                         _success {};
 
         void rollback() noexcept;
 

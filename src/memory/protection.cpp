@@ -18,6 +18,19 @@ ptrdiff_t memory::ProtectedRegion::size() const
     return range.size();
 }
 
+void memory::Protection::rollback() noexcept
+{
+    LOG_DBG("Rolling back protection");
+
+    DWORD ignored {};
+    for (auto it = _regions.rbegin(); it != _regions.rend(); ++it)
+    {
+        VirtualProtect(it->range.start().to_ptr<void*>(), it->range.size(), it->oldProtect, &ignored);
+    }
+
+    _regions.clear();
+}
+
 memory::Protection::Protection(const Handle& base, const size_t size, const DWORD protection)
 {
     LOG_DBG("Protecting {}+{:X} [{:08X}]", base.formatted(), size, protection);
@@ -85,17 +98,4 @@ bool memory::Protection::success() const
 const std::vector<memory::ProtectedRegion>& memory::Protection::regions() const
 {
     return _regions;
-}
-
-void memory::Protection::rollback() noexcept
-{
-    LOG_DBG("Rolling back protection");
-
-    DWORD ignored {};
-    for (auto it = _regions.rbegin(); it != _regions.rend(); ++it)
-    {
-        VirtualProtect(it->range.start().to_ptr<void*>(), it->range.size(), it->oldProtect, &ignored);
-    }
-
-    _regions.clear();
 }

@@ -49,8 +49,7 @@ namespace logging
             const std::string&           name,
             const std::filesystem::path& path,
             LogLevel                     level   = LogLevel::Debug,
-            bool                         console = false
-        );
+            bool                         console = false);
 
         ~Logger();
 
@@ -94,8 +93,7 @@ namespace logging
         try
         {
             message = fmt::format(format, std::forward<Args>(args)...);
-        }
-        catch (const std::exception& e)
+        } catch (const std::exception& e)
         {
             message = "Error formatting log message \"" + format + "\": " + e.what();
             level   = LogLevel::Error;

@@ -19,8 +19,7 @@ nlohmann::ordered_json fw::Settings::serialize() const
             {
                 json[value->name()] = value->get();
             },
-            setting
-        );
+            setting);
     }
 
     if (_children.empty())
@@ -44,7 +43,7 @@ void fw::Settings::deserialize(const nlohmann::ordered_json& json)
     {
         for (auto& setting : _settings)
         {
-            bool stop = false;
+            auto stop = false;
             std::visit(
                 [&](auto&& s)
                 {
@@ -54,8 +53,8 @@ void fw::Settings::deserialize(const nlohmann::ordered_json& json)
                         stop = true;
                     }
                 },
-                setting
-            );
+                setting);
+
             if (stop)
             {
                 return;
@@ -120,7 +119,7 @@ void fw::Settings::needSave()
 {
     std::lock_guard lock(_mutex);
 
-    if (_owner && _owner != this)
+    if (_owner&& _owner != this)
     {
         _owner->needSave();
         return;
@@ -140,7 +139,7 @@ void fw::Settings::save(const bool force)
 
     _needSave = false;
 
-    if (_owner && _owner != this)
+    if (_owner&& _owner != this)
     {
         _owner->save(force);
         return;
@@ -155,7 +154,7 @@ void fw::Settings::load()
     std::unique_lock lock(_mutex);
 
     _loaded = false;
-    if (_owner && _owner != this)
+    if (_owner&& _owner != this)
     {
         lock.unlock();
         _owner->load();
@@ -174,7 +173,7 @@ void fw::Settings::load()
         return;
     }
 
-    const auto  json = nlohmann::ordered_json::parse(ifs, nullptr, false);
+    const auto json = nlohmann::ordered_json::parse(ifs, nullptr, false);
     if (json.is_discarded() || !json.is_object() || json.empty() || json.is_null())
     {
         LOG_WARN("Failed to parse settings file, re-saving current state");
@@ -189,8 +188,7 @@ void fw::Settings::load()
         deserialize(json);
         LOG_INFO("Loaded settings");
         _loaded = true;
-    }
-    catch (const std::exception& e)
+    } catch (const std::exception& e)
     {
         LOG_WARN("Failed to deserialize settings, re-saving current state");
         lock.unlock();

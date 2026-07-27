@@ -8,8 +8,7 @@ bool proxy::check(const std::initializer_list<std::string>& candidates, std::str
     if (!GetModuleHandleEx(
         GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
         reinterpret_cast<LPCSTR>(&check),
-        &hOurModule
-    ))
+        &hOurModule))
     {
         return false;
     }

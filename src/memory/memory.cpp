@@ -29,8 +29,7 @@ bool memory::tryNearAlloc(const Handle& target, const size_t size, Handle& resul
                 reinterpret_cast<void*>(tryAddr),
                 size,
                 MEM_RESERVE | MEM_COMMIT,
-                PAGE_READWRITE
-            ))
+                PAGE_READWRITE))
             {
                 result = Handle(p);
                 LOG_DBG("Successful allocation at {:08X}", result.raw());
@@ -47,8 +46,7 @@ bool memory::locateAllPointers(
     const Handle&        base,
     const size_t         largestOffset,
     const Handle&        target,
-    std::vector<Handle>& results
-)
+    std::vector<Handle>& results)
 {
     results.clear();
 
@@ -113,8 +111,7 @@ bool memory::findFunctionStart(const Handle& instruction, Handle& result)
                 result = Handle(va + ccSeq);
                 return true;
             }
-        }
-        else
+        } else
         {
             ccSeq = 0;
         }

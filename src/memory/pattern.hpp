@@ -21,8 +21,8 @@ namespace memory
             Callback
         };
 
-        Type type;
-        intptr_t             value;
+        Type     type;
+        intptr_t value;
 
         explicit PatternTransform(Type type, intptr_t value);
 
@@ -32,7 +32,7 @@ namespace memory
     class Pattern
     {
     public:
-        using Callback = std::function<bool(Handle&)>;
+        using Callback = std::function<bool(Handle &)>;
 
     private:
         std::string _name {};

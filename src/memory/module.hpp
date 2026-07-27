@@ -90,24 +90,37 @@ namespace memory
         bool findWstring(const std::wstring& string, Handle& result);
 
         bool findReference(const Handle& handle, RefData& result, RefData::Type type = RefData::Type::Any);
+
         bool findReferences(
-            const Handle&         handle,
+            const Handle& handle,
             std::vector<RefData>& results,
-            RefData::Type         type = RefData::Type::Any,
-            int                   max  = 0
-        );
+            RefData::Type type = RefData::Type::Any,
+            int max = 0);
+
         bool findStringReference(const std::string& string, RefData& result);
+
         bool findStringReferences(const std::string& string, std::vector<RefData>& results, int max = 0);
+
         bool findWstringReference(const std::wstring& string, RefData& result);
+
         bool findWstringReferences(const std::wstring& string, std::vector<RefData>& results, int max = 0);
+
         [[nodiscard]] const std::vector<Range>& textSections();
+
         [[nodiscard]] const std::vector<Range>& dataSections();
+
         [[nodiscard]] const std::vector<Range>& entryPoints();
+
         const std::unordered_set<RefData, RefDataHash>& ripRelativeInstructions();
+
         const std::unordered_map<uintptr_t, std::vector<RefData>>& refStringsAscii();
+
         const std::unordered_map<uintptr_t, std::vector<RefData>>& refStringsUtf16();
+
         bool isInCodeSection(const Handle& handle);
+
         bool isInDataSection(const Handle& handle);
+
         bool getDataSection(const Handle& handle, Range& result);
 
         void clear();

@@ -16,15 +16,14 @@ memory::RefData::RefData(
     const uintptr_t instruction,
     const uint8_t   instructionLength,
     const Type      type,
-    const uintptr_t referenced
-) : _instruction(instruction), _instructionLength(instructionLength), _type(type), _reference(referenced) {}
+    const uintptr_t referenced)
+    : _instruction(instruction), _instructionLength(instructionLength), _type(type), _reference(referenced) {}
 
 memory::RefData::RefData(
     const Handle& instruction,
     const uint8_t instructionLength,
     const Type    type,
-    const Handle& referenced
-)
+    const Handle& referenced)
     : _instruction(instruction), _instructionLength(instructionLength), _type(type), _reference(referenced) {}
 
 const memory::Handle& memory::RefData::instruction() const
@@ -56,11 +55,16 @@ const char* memory::RefData::typeToString(const Type type)
 {
     switch (type)
     {
-    case Type::Any: return "Any";
-    case Type::Address: return "Address";
-    case Type::Read: return "Read";
-    case Type::Write: return "Write";
-    case Type::ReadWrite: return "ReadWrite";
+        case Type::Any:
+            return "Any";
+        case Type::Address:
+            return "Address";
+        case Type::Read:
+            return "Read";
+        case Type::Write:
+            return "Write";
+        case Type::ReadWrite:
+            return "ReadWrite";
     }
 
     return "Unknown";
@@ -69,6 +73,43 @@ const char* memory::RefData::typeToString(const Type type)
 std::size_t memory::RefDataHash::operator()(const RefData& obj) const noexcept
 {
     return std::hash<uintptr_t> {}(obj.instruction().raw());
+}
+
+void memory::Module::initSections()
+{
+    if (_sectionsInitialized)
+        return;
+
+    LOG_DBG("Initializing sections of module \"{}\"", _name);
+
+    const auto* dos = _start.to_ptr<PIMAGE_DOS_HEADER>();
+    auto*       nt  = _start.add(dos->e_lfanew).to_ptr<PIMAGE_NT_HEADERS>();
+
+    auto* section = IMAGE_FIRST_SECTION(nt);
+
+    for (unsigned i = 0; i < nt->FileHeader.NumberOfSections; ++i, ++section)
+    {
+        auto*  secBase = _start.to_ptr<uint8_t*>() + section->VirtualAddress;
+        size_t secSize = section->Misc.VirtualSize;
+
+        if (memcmp(section->Name, ".text", 5) == 0)
+        {
+            _textSections.emplace_back(Handle(secBase), secSize);
+            LOG_DBG("Text section at {} [{:X}]", _textSections.back().start().formatted(), _textSections.back().size());
+        } else if (memcmp(section->Name, ".rdata", 6) == 0 || memcmp(section->Name, ".data", 5) == 0)
+        {
+            _dataSections.emplace_back(Handle(secBase), secSize);
+            LOG_DBG("Data section at {} [{:X}]", _dataSections.back().start().formatted(), _dataSections.back().size());
+        }
+    }
+
+    if (_textSections.empty())
+        LOG_DBG("No text sections found");
+
+    if (_dataSections.empty())
+        LOG_DBG("No data sections found");
+
+    _sectionsInitialized = true;
 }
 
 void memory::Module::initEntryPoints()
@@ -135,10 +176,8 @@ void memory::Module::initEntryPoints()
             [](const auto& a, const auto& b)
             {
                 return a.start() == b.start();
-            }
-        ),
-        entries.end()
-    );
+            }),
+        entries.end());
 
     const auto& pdataDir = nt->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXCEPTION];
     if (pdataDir.VirtualAddress && pdataDir.Size)
@@ -173,14 +212,12 @@ void memory::Module::initEntryPoints()
             [](const auto& a, const auto& b)
             {
                 return a.start() == b.start();
-            }
-        ),
-        _entryPoints.end()
-    );
+            }),
+        _entryPoints.end());
 
     for (auto& entry : entries)
     {
-        bool duplicate = false;
+        auto duplicate = false;
 
         for (const auto& existing : _entryPoints)
         {
@@ -232,12 +269,12 @@ void memory::Module::initRipRelativeIndex()
         {
             if (!visited.claim(rva.raw()))
             {
-                if (range.size() > 0 )
+                if (range.size() > 0)
                 {
                     if (!visited.claim(rva.raw()))
                     {
                         address = address.add(1);
-                        rva = rva.add(1);
+                        rva     = rva.add(1);
                         remaining--;
                         continue;
                     }
@@ -251,12 +288,10 @@ void memory::Module::initRipRelativeIndex()
                                                  ? ZYDIS_MAX_INSTRUCTION_LENGTH
                                                  : std::min(
                                                      static_cast<uintptr_t>(ZYDIS_MAX_INSTRUCTION_LENGTH),
-                                                     remaining
-                                                 );
+                                                     remaining);
 
             if (!ZYAN_SUCCESS(
-                ZydisDecoderDecodeInstruction(&decoder, &context, address.to_ptr<void*>(), length, &instruction)
-            ))
+                ZydisDecoderDecodeInstruction(&decoder, &context, address.to_ptr<void*>(), length, &instruction)))
             {
                 break;
             }
@@ -267,8 +302,7 @@ void memory::Module::initRipRelativeIndex()
             ZydisDecodedOperand operands[ZYDIS_MAX_OPERAND_COUNT];
 
             bool operandsDecoded = ZYAN_SUCCESS(
-                ZydisDecoderDecodeOperands( &decoder, &context, &instruction, operands, instruction.operand_count)
-            );
+                ZydisDecoderDecodeOperands( &decoder, &context, &instruction, operands, instruction.operand_count));
 
             if (operandsDecoded)
             {
@@ -296,18 +330,17 @@ void memory::Module::initRipRelativeIndex()
                         address,
                         instruction.length,
                         type,
-                        address.add(static_cast<ptrdiff_t>(instruction.length) + op.mem.disp.value)
-                    );
+                        address.add(static_cast<ptrdiff_t>(instruction.length) + op.mem.disp.value));
                 }
             }
 
             const bool isLoop = instruction.mnemonic == ZYDIS_MNEMONIC_LOOP || instruction.mnemonic ==
-                ZYDIS_MNEMONIC_LOOPE || instruction.mnemonic == ZYDIS_MNEMONIC_LOOPNE || instruction.mnemonic ==
-                ZYDIS_MNEMONIC_JCXZ || instruction.mnemonic == ZYDIS_MNEMONIC_JECXZ || instruction.mnemonic ==
-                ZYDIS_MNEMONIC_JRCXZ;
+            ZYDIS_MNEMONIC_LOOPE || instruction.mnemonic == ZYDIS_MNEMONIC_LOOPNE || instruction.mnemonic ==
+            ZYDIS_MNEMONIC_JCXZ || instruction.mnemonic == ZYDIS_MNEMONIC_JECXZ || instruction.mnemonic ==
+            ZYDIS_MNEMONIC_JRCXZ;
 
             const bool isControlFlow = instruction.meta.category == ZYDIS_CATEGORY_CALL || instruction.meta.category ==
-                ZYDIS_CATEGORY_UNCOND_BR || instruction.meta.category == ZYDIS_CATEGORY_COND_BR || isLoop;
+            ZYDIS_CATEGORY_UNCOND_BR || instruction.meta.category == ZYDIS_CATEGORY_COND_BR || isLoop;
 
             if (isControlFlow)
             {
@@ -353,44 +386,6 @@ void memory::Module::initRipRelativeIndex()
     LOG_DBG("Found {} instructions in {}ms", _ripRelativeInstructions.size(), duration);
 }
 
-void memory::Module::initSections()
-{
-    if (_sectionsInitialized)
-        return;
-
-    LOG_DBG("Initializing sections of module \"{}\"", _name);
-
-    const auto* dos = _start.to_ptr<PIMAGE_DOS_HEADER>();
-    auto*       nt  = _start.add(dos->e_lfanew).to_ptr<PIMAGE_NT_HEADERS>();
-
-    auto* section = IMAGE_FIRST_SECTION(nt);
-
-    for (unsigned i = 0; i < nt->FileHeader.NumberOfSections; ++i, ++section)
-    {
-        auto*  secBase = _start.to_ptr<uint8_t*>() + section->VirtualAddress;
-        size_t secSize = section->Misc.VirtualSize;
-
-        if (memcmp(section->Name, ".text", 5) == 0)
-        {
-            _textSections.emplace_back(Handle(secBase), secSize);
-            LOG_DBG("Text section at {} [{:X}]", _textSections.back().start().formatted(), _textSections.back().size());
-        }
-        else if (memcmp(section->Name, ".rdata", 6) == 0 || memcmp(section->Name, ".data", 5) == 0)
-        {
-            _dataSections.emplace_back(Handle(secBase), secSize);
-            LOG_DBG("Data section at {} [{:X}]", _dataSections.back().start().formatted(), _dataSections.back().size());
-        }
-    }
-
-    if (_textSections.empty())
-        LOG_DBG("No text sections found");
-
-    if (_dataSections.empty())
-        LOG_DBG("No data sections found");
-
-    _sectionsInitialized = true;
-}
-
 void memory::Module::initRefStrings()
 {
     if (_refStringsInitialized)
@@ -417,11 +412,14 @@ void memory::Module::initRefStrings()
         {
             switch (it->second)
             {
-            case RefType::Reject: continue;
-            case RefType::Ascii: _refStringsAscii[key].emplace_back(data);
-                continue;
-            case RefType::Utf16: _refStringsUtf16[key].emplace_back(data);
-                continue;
+                case RefType::Reject:
+                    continue;
+                case RefType::Ascii:
+                    _refStringsAscii[key].emplace_back(data);
+                    continue;
+                case RefType::Utf16:
+                    _refStringsUtf16[key].emplace_back(data);
+                    continue;
             }
         }
 
@@ -480,8 +478,7 @@ const std::filesystem::path& memory::Module::path()
 bool memory::Module::findPattern(
     const std::vector<uint8_t>& data,
     const std::vector<uint8_t>& mask,
-    Handle&                     result
-) const
+    Handle&                     result) const
 {
     return Scanner::findPattern(*this, data, mask, result);
 }
@@ -525,8 +522,7 @@ bool memory::Module::findReferences(
     const Handle&         handle,
     std::vector<RefData>& results,
     const RefData::Type   type,
-    const int             max
-)
+    const int             max)
 {
     LOG_DBG("Looking for references to {} [{}]", handle.formatted(), RefData::typeToString(type));
 
@@ -705,20 +701,6 @@ const std::vector<memory::Range>& memory::Module::entryPoints()
     return _entryPoints;
 }
 
-bool memory::Module::getDataSection(const Handle& handle, Range& result)
-{
-    for (const auto& section : dataSections())
-    {
-        if (!section.contains(handle))
-            continue;
-
-        result = section;
-        return true;
-    }
-
-    return false;
-}
-
 const std::unordered_set<memory::RefData, memory::RefDataHash>& memory::Module::ripRelativeInstructions()
 {
     if (!_ripRelativeInitialized)
@@ -757,6 +739,20 @@ bool memory::Module::isInCodeSection(const Handle& handle)
 bool memory::Module::isInDataSection(const Handle& handle)
 {
     return contains(dataSections(), handle);
+}
+
+bool memory::Module::getDataSection(const Handle& handle, Range& result)
+{
+    for (const auto& section : dataSections())
+    {
+        if (!section.contains(handle))
+            continue;
+
+        result = section;
+        return true;
+    }
+
+    return false;
 }
 
 void memory::Module::clear()
@@ -817,8 +813,7 @@ bool memory::Module::tryGetByName(const std::string& name, Module& result)
     if (name.empty())
     {
         LOG_DBG("Getting main module");
-    }
-    else
+    } else
     {
         LOG_DBG("Getting module by name \"{}\"", name);
     }

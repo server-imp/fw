@@ -24,8 +24,7 @@ bool memory::PointerValidator::updateCacheItem(const uintptr_t pointer, const ui
     {
         it->second.expireTime = expireTime;
         it->second.valid      = valid;
-    }
-    else
+    } else
     {
         _cache.emplace(pointer, CacheEntry { .expireTime = expireTime, .valid = valid });
     }

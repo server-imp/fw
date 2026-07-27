@@ -1,6 +1,5 @@
 #include "util.hpp"
 
-
 #include "logger.hpp"
 
 #include "memory/handle.hpp"
@@ -15,9 +14,7 @@ void util::ltrim(std::string& s)
             [](const unsigned char ch)
             {
                 return !::isspace(ch);
-            }
-        )
-    );
+            }));
 }
 
 void util::rtrim(std::string& s)
@@ -29,10 +26,8 @@ void util::rtrim(std::string& s)
             [](const unsigned char ch)
             {
                 return !::isspace(ch);
-            }
-        ).base(),
-        s.end()
-    );
+            }).base(),
+        s.end());
 }
 
 void util::trim(std::string& s)
@@ -106,8 +101,7 @@ std::string util::tolower(std::string s)
         [](const unsigned char c) -> char
         {
             return static_cast<char>(std::tolower(c));
-        }
-    );
+        });
 
     return s;
 }
@@ -193,8 +187,7 @@ bool util::equalsIgnoreCase(const std::string& a, const std::string& b)
         [](const char c1, const char c2)
         {
             return std::tolower(c1) == std::tolower(c2);
-        }
-    );
+        });
 }
 
 bool util::equalsIgnoreCase(const std::wstring& a, const std::wstring& b)
@@ -211,8 +204,7 @@ bool util::equalsIgnoreCase(const std::wstring& a, const std::wstring& b)
         [](const wchar_t c1, const wchar_t c2)
         {
             return std::towlower(c1) == std::towlower(c2);
-        }
-    );
+        });
 }
 
 bool util::closeHandle(HANDLE& hObject)
@@ -371,8 +363,7 @@ bool util::isModuleInAnyDirsRelativeToExe(const HMODULE hModule, const std::init
         [&](const std::string& dir)
         {
             return isModuleInDir(hModule, dir.empty() ? path : path / dir);
-        }
-    );
+        });
 }
 
 memory::Handle util::getVirtualFunctionAddress(void* object, const std::size_t offset)
@@ -397,11 +388,11 @@ static constexpr std::array<uint8_t, 65536> allowedTable = []() constexpr
     std::array<uint8_t, 65536> table {};
 
     // ASCII letters
-    for (wchar_t c = L'A'; c <= L'Z'; ++c)
+    for (auto c = L'A'; c <= L'Z'; ++c)
     {
         table[c] = 1;
     }
-    for (wchar_t c = L'a'; c <= L'z'; ++c)
+    for (auto c = L'a'; c <= L'z'; ++c)
     {
         table[c] = 1;
     }

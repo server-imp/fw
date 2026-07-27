@@ -3,19 +3,6 @@
 #include "logger.hpp"
 #include "protection.hpp"
 
-memory::BytePatch::BytePatch(
-    const std::string&                    name,
-    const Handle&                         target,
-    const bool                            flushInstructionCache,
-    const std::initializer_list<uint8_t>& patchBytes
-) : Toggleable(name), _target(target), _patched(patchBytes), _flushInstructionCache(flushInstructionCache) {}
-
-memory::BytePatch::~BytePatch()
-{
-    if (enabled())
-        disable();
-}
-
 bool memory::BytePatch::internalEnable()
 {
     if (_patched.empty())
@@ -24,7 +11,7 @@ bool memory::BytePatch::internalEnable()
         return false;
     }
 
-    Protection protection(_target, _patched.size(), PAGE_EXECUTE_READWRITE);
+    const Protection protection(_target, _patched.size(), PAGE_EXECUTE_READWRITE);
 
     if (!protection.success())
     {
@@ -43,7 +30,7 @@ bool memory::BytePatch::internalEnable()
 
     std::memcpy(target, _patched.data(), _patched.size());
 
-    if (_flushInstructionCache && FlushInstructionCache(GetCurrentProcess(), target, _patched.size()) == 0)
+    if (_flushInstructionCache&& FlushInstructionCache(GetCurrentProcess(), target, _patched.size()) == 0)
     {
         LOG_WARN("Failed to flush instruction cache");
     }
@@ -53,7 +40,7 @@ bool memory::BytePatch::internalEnable()
 
 bool memory::BytePatch::internalDisable()
 {
-    Protection protection(_target, _patched.size(), PAGE_EXECUTE_READWRITE);
+    const Protection protection(_target, _patched.size(), PAGE_EXECUTE_READWRITE);
     if (!protection.success())
     {
         LOG_ERR("Failed to protect memory");
@@ -63,7 +50,7 @@ bool memory::BytePatch::internalDisable()
     const auto target = _target.to_ptr<uint8_t*>();
     std::memcpy(target, _original.data(), _patched.size());
 
-    if (_flushInstructionCache && FlushInstructionCache(GetCurrentProcess(), target, _patched.size()) == 0)
+    if (_flushInstructionCache&& FlushInstructionCache(GetCurrentProcess(), target, _patched.size()) == 0)
     {
         LOG_WARN("Failed to flush instruction cache");
     }
@@ -71,14 +58,26 @@ bool memory::BytePatch::internalDisable()
     return true;
 }
 
+memory::BytePatch::BytePatch(
+    const std::string&                    name,
+    const Handle&                         target,
+    const bool                            flushInstructionCache,
+    const std::initializer_list<uint8_t>& patchBytes)
+    : Toggleable(name), _target(target), _patched(patchBytes), _flushInstructionCache(flushInstructionCache) {}
+
+memory::BytePatch::~BytePatch()
+{
+    if (enabled())
+        disable();
+}
+
 std::shared_ptr<memory::BytePatch> memory::BytePatch::create(
     const std::string&                    name,
     const Handle&                         target,
     bool                                  flushInstructionCache,
-    const std::initializer_list<uint8_t>& patchBytes
-)
+    const std::initializer_list<uint8_t>& patchBytes)
 {
-    return std::make_shared<BytePatch>(name, target, flushInstructionCache, patchBytes);
+    return std::make_shared < BytePatch > (name, target, flushInstructionCache, patchBytes);
 }
 
 memory::NopPatch::NopPatch(const std::string& name, const Handle& target, const size_t size)
@@ -89,39 +88,7 @@ memory::NopPatch::NopPatch(const std::string& name, const Handle& target, const 
 
 std::shared_ptr<memory::NopPatch> memory::NopPatch::create(const std::string& name, const Handle& target, size_t size)
 {
-    return std::make_shared<NopPatch>(name, target, size);
-}
-
-memory::RefNopPatch::RefNopPatch(
-    const std::string&  name,
-    Module&             module,
-    const Handle&       target,
-    const RefData::Type refType
-)
-    : Toggleable(name)
-{
-    std::vector<RefData> refs {};
-    if (!module.findReferences(target, refs, refType))
-    {
-        LOG_ERR("Failed to find references");
-        return;
-    }
-
-    _patches.reserve(refs.size());
-    size_t count = 1;
-    for (const auto& ref : refs)
-    {
-        _patches.push_back(
-            NopPatch::create(fmt::format("{}[{}]", this->name(), count), ref.instruction(), ref.instructionLength())
-        );
-        ++count;
-    }
-}
-
-memory::RefNopPatch::~RefNopPatch()
-{
-    if (enabled())
-        disable();
+    return std::make_shared < NopPatch > (name, target, size);
 }
 
 bool memory::RefNopPatch::internalEnable()
@@ -203,17 +170,81 @@ enable:
     return false;
 }
 
+memory::RefNopPatch::RefNopPatch(
+    const std::string&  name,
+    Module&             module,
+    const Handle&       target,
+    const RefData::Type refType)
+    : Toggleable(name)
+{
+    std::vector<RefData> refs {};
+    if (!module.findReferences(target, refs, refType))
+    {
+        LOG_ERR("Failed to find references");
+        return;
+    }
+
+    _patches.reserve(refs.size());
+    size_t count = 1;
+    for (const auto& ref : refs)
+    {
+        _patches.push_back(
+            NopPatch::create(fmt::format("{}[{}]", this->name(), count), ref.instruction(), ref.instructionLength()));
+        ++count;
+    }
+}
+
+memory::RefNopPatch::~RefNopPatch()
+{
+    if (enabled())
+        disable();
+}
+
 std::shared_ptr<memory::RefNopPatch> memory::RefNopPatch::create(
     const std::string& name,
     Module&            module,
     const Handle&      target,
-    RefData::Type      refType
-)
+    RefData::Type      refType)
 {
-    return std::make_shared<RefNopPatch>(name, module, target, refType);
+    return std::make_shared < RefNopPatch > (name, module, target, refType);
 }
 
-memory::StringRefPatch::StringRefPatch(std::string name, const RefData& ref) : Toggleable(std::move(name))
+bool memory::StringRefPatch::internalEnable()
+{
+    if (_allocation.raw() == 0 || _allocationSize == 0)
+    {
+        LOG_ERR("Invalid allocation (did you forget to set the string?)");
+        return false;
+    }
+
+    const Protection protection(_lea, 7, PAGE_EXECUTE_READWRITE);
+    if (!protection.success())
+    {
+        LOG_ERR("Failed to protect memory");
+        return false;
+    }
+
+    *_lea.add(3).to_ptr<int32_t*>() = static_cast<int32_t>(_allocation.raw() - _lea.add(7).raw());
+
+    return true;
+}
+
+bool memory::StringRefPatch::internalDisable()
+{
+    const Protection protection(_lea, 7, PAGE_EXECUTE_READWRITE);
+    if (!protection.success())
+    {
+        LOG_ERR("Failed to protect memory");
+        return false;
+    }
+
+    *_lea.add(3).to_ptr<int32_t*>() = static_cast<int32_t>(_originalString.raw() - _lea.add(7).raw());
+
+    return true;
+}
+
+memory::StringRefPatch::StringRefPatch(std::string name, const RefData& ref)
+    : Toggleable(std::move(name))
 {
     _lea            = ref.instruction();
     _originalString = ref.reference();
@@ -311,41 +342,7 @@ void memory::StringRefPatch::setWstring(const std::wstring& string)
     LOG_INFO("Text set");
 }
 
-bool memory::StringRefPatch::internalEnable()
-{
-    if (_allocation.raw() == 0 || _allocationSize == 0)
-    {
-        LOG_ERR("Invalid allocation (did you forget to set the string?)");
-        return false;
-    }
-
-    Protection protection(_lea, 7, PAGE_EXECUTE_READWRITE);
-    if (!protection.success())
-    {
-        LOG_ERR("Failed to protect memory");
-        return false;
-    }
-
-    *_lea.add(3).to_ptr<int32_t*>() = static_cast<int32_t>(_allocation.raw() - _lea.add(7).raw());
-
-    return true;
-}
-
-bool memory::StringRefPatch::internalDisable()
-{
-    Protection protection(_lea, 7, PAGE_EXECUTE_READWRITE);
-    if (!protection.success())
-    {
-        LOG_ERR("Failed to protect memory");
-        return false;
-    }
-
-    *_lea.add(3).to_ptr<int32_t*>() = static_cast<int32_t>(_originalString.raw() - _lea.add(7).raw());
-
-    return true;
-}
-
 std::shared_ptr<memory::StringRefPatch> memory::StringRefPatch::create(const std::string& name, const RefData& lea)
 {
-    return std::make_shared<StringRefPatch>(name, lea);
+    return std::make_shared < StringRefPatch > (name, lea);
 }

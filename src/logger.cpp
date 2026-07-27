@@ -4,11 +4,16 @@ const char* logging::logLevelToString(const LogLevel level)
 {
     switch (level)
     {
-    case LogLevel::Debug: return " DBG";
-    case LogLevel::Info: return "INFO";
-    case LogLevel::Warning: return "WARN";
-    case LogLevel::Error: return " ERR";
-    default: return " UNK";
+        case LogLevel::Debug:
+            return " DBG";
+        case LogLevel::Info:
+            return "INFO";
+        case LogLevel::Warning:
+            return "WARN";
+        case LogLevel::Error:
+            return " ERR";
+        default:
+            return " UNK";
     }
 }
 
@@ -23,8 +28,7 @@ logging::Logger::Logger(
     const std::string&           name,
     const std::filesystem::path& path,
     const LogLevel               level,
-    const bool                   console
-)
+    const bool                   console)
 {
     _name = name;
     _path = path;
@@ -91,11 +95,9 @@ void logging::Logger::unregisterCallback(const LogCallback& callback)
             _callbacks.end(),
             [&](const LogCallback& cb)
             {
-                return cb.target<void(const LogEntry&)>() == callback.target<void(const LogEntry&)>();
-            }
-        ),
-        _callbacks.end()
-    );
+                return cb.target<void(const LogEntry &)>() == callback.target<void(const LogEntry &)>();
+            }),
+        _callbacks.end());
 }
 
 bool logging::Logger::setConsole(const bool value)

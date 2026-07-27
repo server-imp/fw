@@ -19,8 +19,7 @@ namespace memory
             const Range&                range,
             const std::vector<uint8_t>& data,
             const std::vector<uint8_t>& mask,
-            Handle&                     result
-        );
+            Handle&                     result);
 
         static bool findString(const std::string& string, const Range& range, Handle& result);
 

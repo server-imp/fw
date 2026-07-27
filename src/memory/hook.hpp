@@ -17,7 +17,6 @@ namespace memory
         Hook(std::string name, void* target, void* original, void* ownFunction);
 
     public:
-
         [[nodiscard]] void* target() const;
 
         template <typename T>

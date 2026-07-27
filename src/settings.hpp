@@ -33,15 +33,19 @@ namespace fw
     public:
         virtual ~Setting() = default;
 
-        Setting(Settings* owner, T value, std::string name, std::string description) : _owner(owner), _value(value),
-            _default(value), _name(std::move(name)), _description(std::move(description)) {}
+        Setting(Settings* owner, T value, std::string name, std::string description)
+            : _owner(owner),
+              _value(value),
+              _default(value),
+              _name(std::move(name)),
+              _description(std::move(description)) {}
 
-        const std::string& name() const;
-        const std::string& description() const;
+        [[nodiscard]] const std::string& name() const;
+        [[nodiscard]] const std::string& description() const;
 
-        T set(T value, bool save = true);
-        T get() const;
-        T defaultValue() const;
+        T               set(T value, bool save = true);
+        [[nodiscard]] T get() const;
+        [[nodiscard]] T defaultValue() const;
 
         Setting<T>& onChanged(const OnSettingChangedFn callback)
         {
@@ -155,8 +159,7 @@ namespace fw
         if constexpr (std::is_trivially_copyable_v<T>)
         {
             return _value.load(std::memory_order_relaxed);
-        }
-        else
+        } else
         {
             return _value;
         }

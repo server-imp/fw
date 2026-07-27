@@ -7,8 +7,7 @@ bool memory::Scanner::findPattern(
     const Range&                range,
     const std::vector<uint8_t>& data,
     const std::vector<uint8_t>& mask,
-    Handle&                     result
-)
+    Handle&                     result)
 {
     LOG_DBG("Looking for pattern in range [{}, {}]", range.start().formatted(), range.end().formatted());
 
@@ -38,7 +37,7 @@ bool memory::Scanner::findPattern(
 
     for (size_t i = 0; i <= stopAt; ++i)
     {
-        bool match = true;
+        auto match = true;
         for (size_t j = 0; j < patternSize; ++j)
         {
             if (!mask[j])
@@ -85,7 +84,7 @@ bool memory::Scanner::findString(const std::string& string, const Range& range, 
     {
         if (start[i] == string[0])
         {
-            bool match = true;
+            auto match = true;
             for (size_t j = 1; j < len; ++j)
             {
                 if (start[i + j] != string[j])
@@ -129,7 +128,7 @@ bool memory::Scanner::findWstring(const std::wstring& string, const Range& range
     {
         if (start[i] == string[0])
         {
-            bool match = true;
+            auto match = true;
             for (size_t j = 1; j < len; ++j)
             {
                 if (start[i + j] != string[j])
