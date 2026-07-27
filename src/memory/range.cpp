@@ -15,19 +15,19 @@ memory::Range::Range(const char* moduleName)
     this->_size  = moduleInfo.SizeOfImage;
 }
 
-memory::Range::Range(const Handle& start, const ptrdiff_t size) : _start(start), _size(size)
+memory::Range::Range(const Handle& start, const size_t size) : _start(start), _size(size)
 {
-    _end = Handle(start).add(size);
+    _end = Handle(start).add(static_cast<ptrdiff_t>(size));
 }
 
 memory::Range::Range(const Handle& start, const Handle& end) : _start(start), _end(end)
 {
-    _size = static_cast<std::ptrdiff_t>(_end.raw()) - static_cast<std::ptrdiff_t>(_start.raw());
+    _size = _end.raw() - _start.raw();
 }
 
-memory::Range::Range(const uintptr_t start, const ptrdiff_t size) : _start(start), _size(size)
+memory::Range::Range(const uintptr_t start, const size_t size) : _start(start), _size(size)
 {
-    _end = Handle(start).add(size);
+    _end = Handle(start).add(static_cast<ptrdiff_t>(size));
 }
 
 const memory::Handle& memory::Range::start() const
@@ -40,7 +40,7 @@ const memory::Handle& memory::Range::end() const
     return _end;
 }
 
-const ptrdiff_t& memory::Range::size() const
+const size_t& memory::Range::size() const
 {
     return _size;
 }
@@ -77,4 +77,14 @@ bool memory::Range::contains(const std::vector<Range>& ranges, uintptr_t address
             return range.contains(address);
         }
     );
+}
+
+bool memory::Range::operator<(const Range& other) const noexcept
+{
+    return _start < other._start;
+}
+
+bool memory::Range::operator==(const Range& other) const noexcept
+{
+    return _start == other._start && _end == other._end;
 }
