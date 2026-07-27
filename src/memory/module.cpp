@@ -1,5 +1,6 @@
 #include "module.hpp"
 
+#include "bitset.hpp"
 #include "scanner.hpp"
 #include "logger.hpp"
 #include "util.hpp"
@@ -70,6 +71,134 @@ std::size_t memory::RefDataHash::operator()(const RefData& obj) const noexcept
     return std::hash<uintptr_t> {}(obj.instruction().raw());
 }
 
+void memory::Module::initEntryPoints()
+{
+    if (_entryPointsInitialized)
+        return;
+
+    LOG_DBG("Initializing entry points of module \"{}\"", _name);
+
+    const auto  base = _start.raw();
+    const auto* dos  = reinterpret_cast<const IMAGE_DOS_HEADER*>(base);
+    if (dos->e_magic != IMAGE_DOS_SIGNATURE)
+    {
+        LOG_DBG("Invalid DOS header");
+        return;
+    }
+
+    const auto* nt = reinterpret_cast<const IMAGE_NT_HEADERS64*>(base + dos->e_lfanew);
+    if (nt->Signature != IMAGE_NT_SIGNATURE)
+    {
+        LOG_DBG("Invalid NT header");
+        return;
+    }
+
+    std::vector<Range> entries {};
+    const auto&        exportDir = nt->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT];
+    if (exportDir.VirtualAddress && exportDir.Size)
+    {
+        const auto* exports = reinterpret_cast<const IMAGE_EXPORT_DIRECTORY*>(base + exportDir.VirtualAddress);
+
+        const auto* functions = reinterpret_cast<const DWORD*>(base + exports->AddressOfFunctions);
+
+        entries.reserve(exports->NumberOfFunctions + 1);
+
+        for (DWORD i = 0; i < exports->NumberOfFunctions; ++i)
+        {
+            const DWORD rva = functions[i];
+
+            if (rva == 0)
+                continue;
+
+            if (rva >= exportDir.VirtualAddress && rva < exportDir.VirtualAddress + exportDir.Size)
+            {
+                continue;
+            }
+
+            entries.emplace_back(base + rva, 0);
+        }
+
+        LOG_DBG("{} export entries", entries.size());
+    }
+
+    if (nt->OptionalHeader.AddressOfEntryPoint)
+    {
+        entries.emplace_back(base + nt->OptionalHeader.AddressOfEntryPoint, 0);
+        LOG_DBG("1 entry point");
+    }
+
+    std::sort(entries.begin(), entries.end());
+    entries.erase(
+        std::unique(
+            entries.begin(),
+            entries.end(),
+            [](const auto& a, const auto& b)
+            {
+                return a.start() == b.start();
+            }
+        ),
+        entries.end()
+    );
+
+    const auto& pdataDir = nt->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXCEPTION];
+    if (pdataDir.VirtualAddress && pdataDir.Size)
+    {
+        const auto* functions = reinterpret_cast<const IMAGE_RUNTIME_FUNCTION_ENTRY*>(base + pdataDir.VirtualAddress);
+
+        const std::size_t count = pdataDir.Size / sizeof(IMAGE_RUNTIME_FUNCTION_ENTRY);
+
+        _entryPoints.reserve(entries.size() + count);
+
+        for (std::size_t i = 0; i < count; ++i)
+        {
+            const auto& fn = functions[i];
+
+            if (fn.EndAddress <= fn.BeginAddress)
+                continue;
+
+            const auto address = base + fn.BeginAddress;
+            const auto size    = fn.EndAddress - fn.BeginAddress;
+
+            _entryPoints.emplace_back(address, size);
+        }
+
+        LOG_DBG("{} .pdata entries", _entryPoints.size());
+    }
+
+    std::sort(_entryPoints.begin(), _entryPoints.end());
+    _entryPoints.erase(
+        std::unique(
+            _entryPoints.begin(),
+            _entryPoints.end(),
+            [](const auto& a, const auto& b)
+            {
+                return a.start() == b.start();
+            }
+        ),
+        _entryPoints.end()
+    );
+
+    for (auto& entry : entries)
+    {
+        bool duplicate = false;
+
+        for (const auto& existing : _entryPoints)
+        {
+            if (existing.contains(entry.start()))
+            {
+                duplicate = true;
+                break;
+            }
+        }
+
+        if (!duplicate)
+            _entryPoints.emplace_back(entry);
+    }
+
+    LOG_DBG("Collected {} entry points", _entryPoints.size());
+    _entryPointsInitialized = true;
+}
+
 void memory::Module::initRipRelativeIndex()
 {
     if (_ripRelativeInitialized)
@@ -77,101 +206,144 @@ void memory::Module::initRipRelativeIndex()
 
     LOG_DBG("Initializing RIP-relative index for module \"{}\"", _name);
 
-    const auto sections = textSections();
+    const auto& entries = entryPoints();
 
     auto start = std::chrono::high_resolution_clock::now();
 
     ZydisDecoder decoder;
     ZydisDecoderInit(&decoder, ZYDIS_MACHINE_MODE_LONG_64, ZYDIS_STACK_WIDTH_64);
-    //ZydisDecoderEnableMode(&decoder, ZYDIS_DECODER_MODE_MINIMAL, ZYAN_TRUE);
 
-    for (const auto& section : sections)
+    std::deque work(entries.begin(), entries.end());
+    BitSet     visited(this->size());
+
+    while (!work.empty())
     {
-        auto      address = section.start().raw();
-        ptrdiff_t offset  = 0;
+        const auto range = work.front();
+        work.pop_front();
 
-        auto*      ptr  = section.start().to_ptr<uint8_t*>();
-        const auto size = section.size();
+        if (!this->contains(range.start()))
+            continue;
 
-        while (offset < size)
+        auto address   = range.start();
+        auto rva       = address.sub(_start);
+        auto remaining = range.size() == 0 ? this->end().sub(address).raw() : range.end().sub(address).raw();
+
+        while (remaining > 0)
         {
-            if (const auto byte = ptr[offset]; byte == 0x00 || byte == 0xCC)
+            if (!visited.claim(rva.raw()))
             {
-                ptrdiff_t skip {};
-                while (offset + skip < size && ptr[offset + skip] == byte)
-                    ++skip;
-
-                if (skip >= 4)
+                if (range.size() > 0 )
                 {
-                    offset  += skip;
-                    address += skip;
-                    continue;
+                    if (!visited.claim(rva.raw()))
+                    {
+                        address = address.add(1);
+                        rva = rva.add(1);
+                        remaining--;
+                        continue;
+                    }
                 }
+                break;
             }
 
             ZydisDecodedInstruction instruction;
             ZydisDecoderContext     context;
+            size_t                  length = range.size() == 0
+                                                 ? ZYDIS_MAX_INSTRUCTION_LENGTH
+                                                 : std::min(
+                                                     static_cast<uintptr_t>(ZYDIS_MAX_INSTRUCTION_LENGTH),
+                                                     remaining
+                                                 );
 
-            const ZyanStatus status = ZydisDecoderDecodeInstruction(
-                &decoder,
-                &context,
-                ptr + offset,
-                size - offset,
-                &instruction
-            );
-
-            if (!ZYAN_SUCCESS(status))
+            if (!ZYAN_SUCCESS(
+                ZydisDecoderDecodeInstruction(&decoder, &context, address.to_ptr<void*>(), length, &instruction)
+            ))
             {
-                ++offset;
-                ++address;
-                continue;
+                break;
             }
 
-            const auto& modrm = instruction.raw.modrm;
-            const auto& disp  = instruction.raw.disp;
+            if (instruction.length == 0)
+                break;
 
-            if (instruction.attributes & ZYDIS_ATTRIB_HAS_MODRM && modrm.mod == 0 && modrm.rm == 5 && disp.size == 32)
+            ZydisDecodedOperand operands[ZYDIS_MAX_OPERAND_COUNT];
+
+            bool operandsDecoded = ZYAN_SUCCESS(
+                ZydisDecoderDecodeOperands( &decoder, &context, &instruction, operands, instruction.operand_count)
+            );
+
+            if (operandsDecoded)
             {
-                ZydisDecodedOperand operands[ZYDIS_MAX_OPERAND_COUNT];
-                if (!ZYAN_SUCCESS(
-                    ZydisDecoderDecodeOperands( &decoder, &context, &instruction, operands, instruction.operand_count)
-                ))
-                    goto advance;
-
-                bool read {}, write {};
                 for (size_t i = 0; i < instruction.operand_count; ++i)
                 {
                     const auto& op = operands[i];
-                    if (op.type != ZYDIS_OPERAND_TYPE_MEMORY)
+
+                    if (op.type != ZYDIS_OPERAND_TYPE_MEMORY || op.mem.base != ZYDIS_REGISTER_RIP)
                         continue;
 
-                    if (op.actions & ZYDIS_OPERAND_ACTION_MASK_READ)
-                        read = true;
-                    if (op.actions & ZYDIS_OPERAND_ACTION_MASK_WRITE)
-                        write = true;
+                    bool read  = op.actions & ZYDIS_OPERAND_ACTION_MASK_READ;
+                    bool write = op.actions & ZYDIS_OPERAND_ACTION_MASK_WRITE;
+
+                    RefData::Type type {};
+                    if (read && write)
+                        type = RefData::Type::ReadWrite;
+                    else if (read)
+                        type = RefData::Type::Read;
+                    else if (write)
+                        type = RefData::Type::Write;
+                    else
+                        type = RefData::Type::Address;
+
+                    _ripRelativeInstructions.emplace(
+                        address,
+                        instruction.length,
+                        type,
+                        address.add(static_cast<ptrdiff_t>(instruction.length) + op.mem.disp.value)
+                    );
                 }
-
-                RefData::Type type {};
-                if (read && write)
-                    type = RefData::Type::ReadWrite;
-                else if (read)
-                    type = RefData::Type::Read;
-                else if (write)
-                    type = RefData::Type::Write;
-                else
-                    type = RefData::Type::Address;
-
-                _ripRelativeInstructions.emplace(
-                    address,
-                    instruction.length,
-                    type,
-                    address + instruction.length + disp.value
-                );
             }
 
-        advance:
-            offset += instruction.length;
-            address += instruction.length;
+            const bool isLoop = instruction.mnemonic == ZYDIS_MNEMONIC_LOOP || instruction.mnemonic ==
+                ZYDIS_MNEMONIC_LOOPE || instruction.mnemonic == ZYDIS_MNEMONIC_LOOPNE || instruction.mnemonic ==
+                ZYDIS_MNEMONIC_JCXZ || instruction.mnemonic == ZYDIS_MNEMONIC_JECXZ || instruction.mnemonic ==
+                ZYDIS_MNEMONIC_JRCXZ;
+
+            const bool isControlFlow = instruction.meta.category == ZYDIS_CATEGORY_CALL || instruction.meta.category ==
+                ZYDIS_CATEGORY_UNCOND_BR || instruction.meta.category == ZYDIS_CATEGORY_COND_BR || isLoop;
+
+            if (isControlFlow)
+            {
+                for (size_t i = 0; i < instruction.operand_count; i++)
+                {
+                    const auto& op = operands[i];
+
+                    if (op.type == ZYDIS_OPERAND_TYPE_IMMEDIATE && op.imm.is_relative)
+                    {
+                        auto target = address.add(static_cast<int64_t>(instruction.length) + op.imm.value.s);
+
+                        if (this->contains(target))
+                            work.emplace_back(target, 0);
+
+                        continue;
+                    }
+
+                    if (op.type == ZYDIS_OPERAND_TYPE_MEMORY && op.mem.base == ZYDIS_REGISTER_RIP && (instruction.meta.
+                        category == ZYDIS_CATEGORY_CALL || instruction.meta.category == ZYDIS_CATEGORY_UNCOND_BR))
+                    {
+                        auto pointerAddress = address.add(static_cast<int64_t>(instruction.length) + op.mem.disp.value);
+
+                        if (!this->contains(pointerAddress))
+                            continue;
+
+                        auto target = pointerAddress.deref<uintptr_t>();
+
+                        if (this->contains(target))
+                            work.emplace_back(target, 0);
+                    }
+                }
+            }
+
+            address   = address.add(instruction.length);
+            rva       = rva.add(instruction.length);
+            remaining -= instruction.length;
         }
     }
 
@@ -523,6 +695,16 @@ const std::vector<memory::Range>& memory::Module::dataSections()
     return _dataSections;
 }
 
+const std::vector<memory::Range>& memory::Module::entryPoints()
+{
+    if (!_entryPointsInitialized)
+    {
+        initEntryPoints();
+    }
+
+    return _entryPoints;
+}
+
 bool memory::Module::getDataSection(const Handle& handle, Range& result)
 {
     for (const auto& section : dataSections())
@@ -580,6 +762,7 @@ bool memory::Module::isInDataSection(const Handle& handle)
 void memory::Module::clear()
 {
     _sectionsInitialized    = false;
+    _entryPointsInitialized = false;
     _ripRelativeInitialized = false;
     _refStringsInitialized  = false;
 
@@ -587,6 +770,7 @@ void memory::Module::clear()
     _textSections.clear();
     _refStringsAscii.clear();
     _refStringsUtf16.clear();
+    _entryPoints.clear();
     _ripRelativeInstructions.clear();
 }
 
@@ -673,7 +857,6 @@ bool memory::Module::tryGetByAddr(const Handle& addr, Module& result)
         return false;
     }
 
-    LOG_DBG("Attempting to find module that holds address {:08X}", addr.raw());
     DWORD needed = 0;
 
     // Get the required size
@@ -698,14 +881,12 @@ bool memory::Module::tryGetByAddr(const Handle& addr, Module& result)
             continue;
         }
 
-        if (addr >= result.start() && addr < result.end())
+        if (addr >= result.start() && addr <= result.end())
         {
-            LOG_DBG("Found module: {}", result.name());
             return true;
         }
     }
 
-    LOG_DBG("Not found");
     return false;
 }
 

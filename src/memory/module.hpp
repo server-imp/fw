@@ -61,6 +61,9 @@ namespace memory
         std::vector<Range> _textSections {};
         std::vector<Range> _dataSections {};
 
+        bool               _entryPointsInitialized {};
+        std::vector<Range> _entryPoints {};
+
         bool                                     _ripRelativeInitialized {};
         std::unordered_set<RefData, RefDataHash> _ripRelativeInstructions {};
 
@@ -68,8 +71,9 @@ namespace memory
         std::unordered_map<uintptr_t, std::vector<RefData>> _refStringsAscii {};
         std::unordered_map<uintptr_t, std::vector<RefData>> _refStringsUtf16 {};
 
-        void initRipRelativeIndex();
         void initSections();
+        void initEntryPoints();
+        void initRipRelativeIndex();
         void initRefStrings();
 
     public:
@@ -96,19 +100,15 @@ namespace memory
         bool findStringReferences(const std::string& string, std::vector<RefData>& results, int max = 0);
         bool findWstringReference(const std::wstring& string, RefData& result);
         bool findWstringReferences(const std::wstring& string, std::vector<RefData>& results, int max = 0);
-
         [[nodiscard]] const std::vector<Range>& textSections();
         [[nodiscard]] const std::vector<Range>& dataSections();
-
-        bool getDataSection(const Handle& handle, Range& result);
-
+        [[nodiscard]] const std::vector<Range>& entryPoints();
         const std::unordered_set<RefData, RefDataHash>& ripRelativeInstructions();
-
         const std::unordered_map<uintptr_t, std::vector<RefData>>& refStringsAscii();
         const std::unordered_map<uintptr_t, std::vector<RefData>>& refStringsUtf16();
-
         bool isInCodeSection(const Handle& handle);
         bool isInDataSection(const Handle& handle);
+        bool getDataSection(const Handle& handle, Range& result);
 
         void clear();
 
