@@ -92,10 +92,10 @@ namespace memory
         bool findReference(const Handle& handle, RefData& result, RefData::Type type = RefData::Type::Any);
 
         bool findReferences(
-            const Handle& handle,
+            const Handle&         handle,
             std::vector<RefData>& results,
-            RefData::Type type = RefData::Type::Any,
-            int max = 0);
+            RefData::Type         type = RefData::Type::Any,
+            int                   max  = 0);
 
         bool findStringReference(const std::string& string, RefData& result);
 

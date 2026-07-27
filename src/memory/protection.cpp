@@ -13,7 +13,7 @@ memory::Handle memory::ProtectedRegion::end() const
     return range.end();
 }
 
-ptrdiff_t memory::ProtectedRegion::size() const
+size_t memory::ProtectedRegion::size() const
 {
     return range.size();
 }

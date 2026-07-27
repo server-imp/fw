@@ -3,35 +3,36 @@
 #pragma once
 #include "memory/hook.hpp"
 
-namespace memory::hooks
+namespace memory
 {
-    class WndProc final : public Hook
+    namespace hooks
     {
-    private:
-        static WndProc* _instance;
-        HWND            _hWnd {};
-        WNDPROC         _originalWndProc {};
+        class WndProc final : public Hook
+        {
+        private:
+            static WndProc* _instance;
+            HWND            _hWnd {};
+            WNDPROC         _originalWndProc {};
 
-        std::vector<std::function<uintptr_t(HWND, UINT, WPARAM, LPARAM)>> _callbacks {};
+            std::vector<std::function<uintptr_t(HWND, UINT, WPARAM, LPARAM)>> _callbacks {};
 
-    protected:
-        bool internalEnable() override;
-        bool internalDisable() override;
+        protected:
+            bool internalEnable() override;
+            bool internalDisable() override;
 
-    public:
-        explicit WndProc(HWND hWnd);
+        public:
+            explicit WndProc(HWND hWnd);
 
-        ~WndProc() override;
+            ~WndProc() override;
 
-        void addCallback(const std::function<uintptr_t(HWND, UINT, WPARAM, LPARAM)>& callback);
+            void addCallback(const std::function<uintptr_t(HWND, UINT, WPARAM, LPARAM)>& callback);
 
-    private:
-        LRESULT CALLBACK internalWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) const;
+        private:
+            LRESULT CALLBACK internalWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) const;
 
-        static LRESULT CALLBACK wndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
-
-    public:
-    };
+            static LRESULT CALLBACK wndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+        };
+    }
 }
 
 #endif //FW_WNDPROC_HPP

@@ -119,7 +119,7 @@ void fw::Settings::needSave()
 {
     std::lock_guard lock(_mutex);
 
-    if (_owner&& _owner != this)
+    if (_owner && _owner != this)
     {
         _owner->needSave();
         return;
@@ -139,7 +139,7 @@ void fw::Settings::save(const bool force)
 
     _needSave = false;
 
-    if (_owner&& _owner != this)
+    if (_owner && _owner != this)
     {
         _owner->save(force);
         return;
@@ -154,7 +154,7 @@ void fw::Settings::load()
     std::unique_lock lock(_mutex);
 
     _loaded = false;
-    if (_owner&& _owner != this)
+    if (_owner && _owner != this)
     {
         lock.unlock();
         _owner->load();
@@ -188,7 +188,7 @@ void fw::Settings::load()
         deserialize(json);
         LOG_INFO("Loaded settings");
         _loaded = true;
-    } catch (const std::exception& e)
+    } catch (const std::exception&)
     {
         LOG_WARN("Failed to deserialize settings, re-saving current state");
         lock.unlock();

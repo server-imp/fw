@@ -17,13 +17,13 @@ static void safeRelease(T*& p)
 }
 
 memory::hooks::D3D11::D3D11(
-    HWND                                      hWnd,
-    void*                                     presentPtr,
-    void*                                     resizeBuffersPtr,
-    const std::function<void()>&              cbPresent,
-    const std::function<void(D3D11 *, bool)>& cbResizeBuffers,
-    const std::function<bool(D3D11 *)>&       cbStarted,
-    const std::function<void(D3D11 *)>&       cbShutdown)
+    HWND                                     hWnd,
+    void*                                    presentPtr,
+    void*                                    resizeBuffersPtr,
+    const std::function<void()>&             cbPresent,
+    const std::function<void(D3D11*, bool)>& cbResizeBuffers,
+    const std::function<bool(D3D11*)>&       cbStarted,
+    const std::function<void(D3D11*)>&       cbShutdown)
     : Hook("D3D11 Hook", nullptr, nullptr, nullptr),
       _cbPresent(cbPresent),
       _cbResizeBuffers(cbResizeBuffers),
@@ -116,12 +116,12 @@ HWND memory::hooks::D3D11::hWnd() const
 }
 
 std::optional<std::unique_ptr<memory::hooks::D3D11>> memory::hooks::D3D11::create(
-    const std::string&                        windowClassName,
-    const std::string&                        windowName,
-    const std::function<void()>&              cbPresent,
-    const std::function<void(D3D11 *, bool)>& cbResizeBuffers,
-    const std::function<bool(D3D11 *)>&       cbStarted,
-    const std::function<void(D3D11 *)>&       cbShutdown)
+    const std::string&                       windowClassName,
+    const std::string&                       windowName,
+    const std::function<void()>&             cbPresent,
+    const std::function<void(D3D11*, bool)>& cbResizeBuffers,
+    const std::function<bool(D3D11*)>&       cbStarted,
+    const std::function<void(D3D11*)>&       cbShutdown)
 {
     if (_instance)
     {
@@ -240,14 +240,8 @@ std::optional<std::unique_ptr<memory::hooks::D3D11>> memory::hooks::D3D11::creat
         UnregisterClass(wc.lpszClassName, wc.hInstance);
     }
 
-    return std::unique_ptr < D3D11 > (new D3D11(
-        hWnd,
-        _presentPtr,
-        _resizeBuffersPtr,
-        cbPresent,
-        cbResizeBuffers,
-        cbStarted,
-        cbShutdown));
+    return std::unique_ptr<D3D11>(
+        new D3D11(hWnd, _presentPtr, _resizeBuffersPtr, cbPresent, cbResizeBuffers, cbStarted, cbShutdown));
 }
 
 bool memory::hooks::D3D11::createRenderTarget(IDXGISwapChain* swapChain)

@@ -48,5 +48,5 @@ void BitSet::flip()
         word = ~word;
 
     if (const size_t extra = _bits.size() * 64 - _size)
-        _bits.back() &= (UINT64_MAX >> extra);
+        _bits.back() &= UINT64_MAX >> extra;
 }

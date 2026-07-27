@@ -13,7 +13,7 @@ void util::ltrim(std::string& s)
             s.end(),
             [](const unsigned char ch)
             {
-                return !::isspace(ch);
+                return !isspace(ch);
             }));
 }
 
@@ -25,7 +25,7 @@ void util::rtrim(std::string& s)
             s.rend(),
             [](const unsigned char ch)
             {
-                return !::isspace(ch);
+                return !isspace(ch);
             }).base(),
         s.end());
 }

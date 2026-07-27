@@ -105,7 +105,7 @@ namespace logging
         {
             _recentEntries.pop_front();
         }
-        _recentEntries.push_back({ timestamp, level, message });
+        _recentEntries.push_back({ .timestamp = timestamp, .level = level, .message = message });
 
         const auto& entry = _recentEntries.back();
 

@@ -41,13 +41,13 @@ namespace memory
         [[nodiscard]] const std::string& formatted() const;
 
         template <typename T>
-        std::enable_if_t<std::is_pointer_v<T>, T> to_ptr() const
+        [[nodiscard]] std::enable_if_t<std::is_pointer_v<T>, T> to_ptr() const
         {
             return reinterpret_cast<T>(_pointer);
         }
 
         template <typename T>
-        std::enable_if_t<std::is_object_v<T>, T&> deref() const
+        [[nodiscard]] std::enable_if_t<std::is_object_v<T>, T&> deref() const
         {
             return *to_ptr<T*>();
         }

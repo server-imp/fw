@@ -47,13 +47,13 @@ namespace fw
         [[nodiscard]] T get() const;
         [[nodiscard]] T defaultValue() const;
 
-        Setting<T>& onChanged(const OnSettingChangedFn callback)
+        Setting& onChanged(const OnSettingChangedFn callback)
         {
             _onChanged = callback;
             return *this;
         }
 
-        Setting<T>& validator(const std::function<void(std::atomic<T>&)>& callback)
+        Setting& validator(const std::function<void(std::atomic<T>&)>& callback)
         {
             _validator = callback;
             return *this;
@@ -98,7 +98,7 @@ namespace fw
 
         virtual std::unique_ptr<Settings> createChild(const std::string& name)
         {
-            return std::make_unique<fw::Settings>(this, name);
+            return std::make_unique<Settings>(this, name);
         }
 
     public:
@@ -146,7 +146,7 @@ namespace fw
 
         if (_onChanged)
         {
-            auto refVariant = fw::SettingRefVariant(this);
+            auto refVariant = SettingRefVariant(this);
             _onChanged(refVariant);
         }
 

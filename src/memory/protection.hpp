@@ -9,9 +9,9 @@ namespace memory
         Range range {};
         DWORD oldProtect {};
 
-        [[nodiscard]] Handle    start() const;
-        [[nodiscard]] Handle    end() const;
-        [[nodiscard]] ptrdiff_t size() const;
+        [[nodiscard]] Handle start() const;
+        [[nodiscard]] Handle end() const;
+        [[nodiscard]] size_t size() const;
     };
 
     class Protection
