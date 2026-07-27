@@ -38,7 +38,7 @@ namespace memory
 
         [[nodiscard]] bool null() const;
 
-        const std::string& formatted() const;
+        [[nodiscard]] const std::string& formatted() const;
 
         template <typename T>
         std::enable_if_t<std::is_pointer_v<T>, T> to_ptr() const

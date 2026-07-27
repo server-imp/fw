@@ -50,23 +50,29 @@ memory::Handle memory::Handle::rip() const
 
 memory::Handle memory::Handle::resolve_relative_call() const
 {
-    LOG_DBG("Resolving relative call at {:08X}", _pointer);
+    LOG_DBG("Resolving relative call at {}", formatted());
+
+    if (const auto byte = deref<uint8_t>(); byte != 0xE8)
+    {
+        LOG_DBG("{:02X} != E8", byte);
+        return {};
+    }
 
     const auto offset = add(1).deref<int32_t>();
-    LOG_DBG("Offset: {:04X}", offset);
+    LOG_DBG("Offset: {:X}", offset);
 
     const auto nextInstruction = add(5);
-    LOG_DBG("Next instruction: {:08X}", nextInstruction.raw());
+    LOG_DBG("Next instruction: {}", nextInstruction.formatted());
 
     auto result = nextInstruction.add(offset);
-    LOG_DBG("Resolved to: {:08X}", result.raw());
+    LOG_DBG("Resolved to: {}", result.formatted());
 
     return result;
 }
 
 bool memory::Handle::nop(const size_t size) const
 {
-    LOG_DBG("NOPing {} bytes at {:08X}", size, _pointer);
+    LOG_DBG("NOPing {} bytes at {}", size, formatted());
 
     if (size == 0)
     {
@@ -159,6 +165,7 @@ bool memory::Handle::operator>=(const uintptr_t other) const noexcept
 }
 
 static std::unordered_map<uintptr_t, std::string> formattedHandles;
+
 const std::string& memory::Handle::format(const Handle& handle)
 {
     if (const auto find = formattedHandles.find(handle.raw()); find != formattedHandles.end())
