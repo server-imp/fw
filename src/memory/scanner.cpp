@@ -10,7 +10,7 @@ bool memory::Scanner::findPattern(
     Handle&                     result
 )
 {
-    LOG_DBG("Looking for pattern in range {:X}-{:X} [{:04X}]", range.start().raw(), range.end().raw(), range.size());
+    LOG_DBG("Looking for pattern in range [{}, {}]", range.start().formatted(), range.end().formatted());
 
     const size_t patternSize = data.size();
     const size_t rangeSize   = range.size();
