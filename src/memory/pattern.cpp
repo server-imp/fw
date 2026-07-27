@@ -149,21 +149,17 @@ bool memory::Pattern::resolve(const Range& range, Handle& result)
     }
 
     Handle pointer {};
-    LOG_DBG("Locating pattern");
     for (size_t i = 0; i < _data.size(); ++i)
     {
         if (!Scanner::findPattern(range, _data[i], _mask[i], pointer))
         {
             continue;
         }
-
-        LOG_DBG("Found pattern {} at {:08X}", i + 1, pointer.raw());
         break;
     }
 
     if (pointer.null())
     {
-        LOG_WARN("Could not find pattern");
         return false;
     }
 
