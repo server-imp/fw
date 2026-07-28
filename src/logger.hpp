@@ -62,7 +62,7 @@ namespace logging
         void unregisterCallback(const LogCallback& callback);
 
         template <typename... Args>
-        void log(LogLevel level, const std::string& format, Args&&... args);
+        void log(LogLevel level, std::format_string<Args...> format, Args&&... args);
 
         bool setConsole(bool value);
 
@@ -73,7 +73,7 @@ namespace logging
     };
 
     template <typename... Args>
-    void Logger::log(LogLevel level, const std::string& format, Args&&... args)
+    void Logger::log(LogLevel level, const std::format_string<Args...> format, Args&&... args)
     {
         if (level < _level)
         {
@@ -87,16 +87,17 @@ namespace logging
         std::tm tm {};
         localtime_s(&tm, &time);
 
-        const auto  timestamp = fmt::format("[{:02}:{:02}:{:02}:{:03}]", tm.tm_hour, tm.tm_min, tm.tm_sec, ms.count());
+        const auto  timestamp = std::format("[{:02}:{:02}:{:02}:{:03}]", tm.tm_hour, tm.tm_min, tm.tm_sec, ms.count());
         std::string message {};
 
         try
         {
-            message = fmt::format(format, std::forward<Args>(args)...);
+            message = std::format(format, std::forward<Args>(args)...);
         } catch (const std::exception& e)
         {
-            message = "Error formatting log message \"" + format + "\": " + e.what();
-            level   = LogLevel::Error;
+            message = std::format("Error formatting log message \"{}\": {}", std::string_view(format.get()), e.what());
+
+            level = LogLevel::Error;
         }
 
         std::lock_guard lock(_mutex);

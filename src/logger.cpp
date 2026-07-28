@@ -47,7 +47,13 @@ logging::Logger::Logger(
         setConsole(true);
     }
 
-    LOG_DBG("Initialized");
+    if (logging::Logger::instance())
+        logging::Logger::instance()->log(
+            logging::LogLevel::Debug,
+            "[{}:{}\t{}()]\t" "Initialized",
+            util::getFileName(__FILE__),
+            __LINE__,
+            __func__);
 }
 
 logging::Logger::~Logger()
@@ -95,7 +101,7 @@ void logging::Logger::unregisterCallback(const LogCallback& callback)
             _callbacks.end(),
             [&](const LogCallback& cb)
             {
-                return cb.target<void(const LogEntry &)>() == callback.target<void(const LogEntry &)>();
+                return cb.target<void(const LogEntry&)>() == callback.target<void(const LogEntry&)>();
             }),
         _callbacks.end());
 }
@@ -154,7 +160,7 @@ void logging::Logger::runCallbacks(const LogEntry& entry) const
 
 void logging::Logger::printLogEntry(const LogEntry& entry, const bool toFile)
 {
-    const auto formatted = fmt::format("{} [{}] {}\n", entry.timestamp, logLevelToString(entry.level), entry.message);
+    const auto formatted = std::format("{} [{}] {}\n", entry.timestamp, logLevelToString(entry.level), entry.message);
 
     if (toFile)
     {

@@ -30,7 +30,7 @@ bool memory::BytePatch::internalEnable()
 
     std::memcpy(target, _patched.data(), _patched.size());
 
-    if (_flushInstructionCache&& FlushInstructionCache(GetCurrentProcess(), target, _patched.size()) == 0)
+    if (_flushInstructionCache && FlushInstructionCache(GetCurrentProcess(), target, _patched.size()) == 0)
     {
         LOG_WARN("Failed to flush instruction cache");
     }
@@ -50,7 +50,7 @@ bool memory::BytePatch::internalDisable()
     const auto target = _target.to_ptr<uint8_t*>();
     std::memcpy(target, _original.data(), _patched.size());
 
-    if (_flushInstructionCache&& FlushInstructionCache(GetCurrentProcess(), target, _patched.size()) == 0)
+    if (_flushInstructionCache && FlushInstructionCache(GetCurrentProcess(), target, _patched.size()) == 0)
     {
         LOG_WARN("Failed to flush instruction cache");
     }
@@ -77,7 +77,7 @@ std::shared_ptr<memory::BytePatch> memory::BytePatch::create(
     bool                                  flushInstructionCache,
     const std::initializer_list<uint8_t>& patchBytes)
 {
-    return std::make_shared < BytePatch > (name, target, flushInstructionCache, patchBytes);
+    return std::make_shared<BytePatch>(name, target, flushInstructionCache, patchBytes);
 }
 
 memory::NopPatch::NopPatch(const std::string& name, const Handle& target, const size_t size)
@@ -88,7 +88,7 @@ memory::NopPatch::NopPatch(const std::string& name, const Handle& target, const 
 
 std::shared_ptr<memory::NopPatch> memory::NopPatch::create(const std::string& name, const Handle& target, size_t size)
 {
-    return std::make_shared < NopPatch > (name, target, size);
+    return std::make_shared<NopPatch>(name, target, size);
 }
 
 bool memory::RefNopPatch::internalEnable()
@@ -189,7 +189,7 @@ memory::RefNopPatch::RefNopPatch(
     for (const auto& ref : refs)
     {
         _patches.push_back(
-            NopPatch::create(fmt::format("{}[{}]", this->name(), count), ref.instruction(), ref.instructionLength()));
+            NopPatch::create(std::format("{}[{}]", this->name(), count), ref.instruction(), ref.instructionLength()));
         ++count;
     }
 }
@@ -206,7 +206,7 @@ std::shared_ptr<memory::RefNopPatch> memory::RefNopPatch::create(
     const Handle&      target,
     RefData::Type      refType)
 {
-    return std::make_shared < RefNopPatch > (name, module, target, refType);
+    return std::make_shared<RefNopPatch>(name, module, target, refType);
 }
 
 bool memory::StringRefPatch::internalEnable()
@@ -344,5 +344,5 @@ void memory::StringRefPatch::setWstring(const std::wstring& string)
 
 std::shared_ptr<memory::StringRefPatch> memory::StringRefPatch::create(const std::string& name, const RefData& lea)
 {
-    return std::make_shared < StringRefPatch > (name, lea);
+    return std::make_shared<StringRefPatch>(name, lea);
 }

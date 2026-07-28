@@ -176,10 +176,10 @@ const std::string& memory::Handle::format(const Handle& handle)
     std::string result;
     if (Module module {}; Module::tryGetByAddr(handle, module))
     {
-        result = fmt::format("{}+{:X}", module.name(), handle.sub(module.start()).raw());
+        result = std::format("{}+{:X}", module.name(), handle.sub(module.start()).raw());
     } else
     {
-        result = fmt::format("{:08X}", handle.raw());
+        result = std::format("{:08X}", handle.raw());
     }
 
     return formattedHandles.emplace(handle.raw(), result).first->second;

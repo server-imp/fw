@@ -38,7 +38,7 @@ std::string memory::PatternTransform::toString() const
             break;
     }
 
-    return fmt::format("{} [{:X}]", typeString, value);
+    return std::format("{} [{:X}]", typeString, value);
 }
 
 void memory::Pattern::parseIda(const std::string& ida, std::vector<uint8_t>& data, std::vector<uint8_t>& mask)

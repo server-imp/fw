@@ -1,23 +1,13 @@
 cmake_minimum_required(VERSION 3.31)
 set(PROJECT_NAME "fw")
-project(${PROJECT_NAME})
-set(CMAKE_CXX_STANDARD 17)
+project(${PROJECT_NAME} LANGUAGES C CXX)
+set(CMAKE_CXX_STANDARD 20)
 
 include(FetchContent)
 
 if (POLICY CMP0169)
     cmake_policy(SET CMP0169 OLD)
 endif ()
-
-FetchContent_Declare(
-        fmt
-        GIT_REPOSITORY "https://github.com/fmtlib/fmt.git"
-        GIT_TAG "e424e3f2e607da02742f73db84873b8084fc714c" # 12.0.0
-        GIT_SHALLOW TRUE
-        CXX_STANDARD 17
-)
-FetchContent_MakeAvailable(fmt)
-target_compile_options(fmt PRIVATE "-w")
 
 FetchContent_Declare(
         minhook
@@ -80,14 +70,11 @@ add_library(${PROJECT_NAME} STATIC
         src/memory/hooks/wndproc.cpp
 )
 
-add_library(${PROJECT_NAME}::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
-
 target_include_directories(${PROJECT_NAME}
         PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:include>
         ${CMAKE_CURRENT_SOURCE_DIR}/src
-        ${fmt_SOURCE_DIR}/include
         ${minhook_SOURCE_DIR}/include
         ${json_SOURCE_DIR}/single_include
         ${zydis_SOURCE_DIR}/include
@@ -95,13 +82,12 @@ target_include_directories(${PROJECT_NAME}
 )
 
 target_precompile_headers(${PROJECT_NAME}
-        PUBLIC
+        PRIVATE
         src/pch.hpp
 )
 
 target_link_libraries(${PROJECT_NAME} PUBLIC
         minhook
-        fmt
         d3d11
         dxgi
         d3dcompiler
@@ -111,5 +97,3 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
         dwmapi
         Zydis
 )
-
-target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)
