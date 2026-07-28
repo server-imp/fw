@@ -115,6 +115,7 @@ namespace logging
     }
 }
 
+#define DBG() if (logging::Logger::instance()) logging::Logger::instance()->log(logging::LogLevel::Debug, "[{}:{}\t{}()]", util::getFileName(__FILE__), __LINE__, __func__)
 #define LOG_DBG(fmt, ...) if (logging::Logger::instance()) logging::Logger::instance()->log(logging::LogLevel::Debug, "[{}:{}\t{}()]\t" fmt, util::getFileName(__FILE__), __LINE__, __func__, ##__VA_ARGS__)
 #define LOG_INFO(fmt, ...) if (logging::Logger::instance()) logging::Logger::instance()->log(logging::LogLevel::Info, " " fmt, ##__VA_ARGS__)
 #define LOG_WARN(fmt, ...) if (logging::Logger::instance()) logging::Logger::instance()->log(logging::LogLevel::Warning, "[{}:{}\t{}()]\t" fmt, util::getFileName(__FILE__), __LINE__, __func__, ##__VA_ARGS__)
