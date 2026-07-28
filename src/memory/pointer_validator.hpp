@@ -56,7 +56,7 @@ namespace memory
     }
 }
 
-#define VALIDATE(pointer) memory::PointerValidator::instance().validate(reinterpret_cast<uintptr_t>(pointer))
+#define VALIDATE(pointer) memory::PointerValidator::instance().validate((uintptr_t)pointer)
 #define DEREFERENCE(pointer, result) memory::PointerValidator::instance().dereference(pointer, result)
 
 #endif //FW_POINTER_VALIDATOR_HPP

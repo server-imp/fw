@@ -49,7 +49,7 @@ void memory::PointerValidator::updateTick()
     _currentTick = GetTickCount64();
 }
 
-bool memory::PointerValidator::validate(const uintptr_t pointer)
+bool memory::PointerValidator::validate(uintptr_t pointer)
 {
     if (pointer < _minimumApplicableAddress || pointer > _maximumApplicableAddress)
     {
@@ -70,7 +70,7 @@ bool memory::PointerValidator::validate(const uintptr_t pointer)
 
 bool memory::PointerValidator::validate(void* pointer)
 {
-    return validate(reinterpret_cast<uintptr_t>(pointer));
+    return validate((uintptr_t)(pointer));
 }
 
 void memory::PointerValidator::clearCache()
