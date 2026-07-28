@@ -16,12 +16,14 @@
 #include <psapi.h>
 #include <fstream>
 #include <d3d11.h>
+#include <cwctype>
 #include <format>
 #include <vector>
 #include <chrono>
 #include <thread>
 #include <atomic>
 #include <string>
+
 #include <deque>
 #include <mutex>
 
