@@ -83,6 +83,8 @@ namespace memory
 
         const std::filesystem::path& path();
 
+        bool findFunctionStart(const Handle& instruction, Handle& functionStart);
+
         bool findPattern(const std::vector<uint8_t>& data, const std::vector<uint8_t>& mask, Handle& result) const;
 
         bool findString(const std::string& string, Handle& result);

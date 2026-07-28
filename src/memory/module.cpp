@@ -3,6 +3,7 @@
 #include "bitset.hpp"
 #include "scanner.hpp"
 #include "logger.hpp"
+#include "memory.hpp"
 #include "util.hpp"
 
 #ifndef FW_MIN_STRING_LENGTH
@@ -473,6 +474,54 @@ const std::string& memory::Module::name()
 const std::filesystem::path& memory::Module::path()
 {
     return _path;
+}
+
+bool memory::Module::findFunctionStart(const Handle& instruction, Handle& functionStart)
+{
+    LOG_DBG("Attempting to find function start for {}", instruction.formatted());
+
+    // try to find the function in collected entrypoints first
+    for (const auto& entry : entryPoints())
+    {
+        if (entry.contains(instruction))
+        {
+            LOG_DBG("Found function in collected entrypoints: {}", entry.start().formatted());
+            functionStart = entry.start();
+            return true;
+        }
+    }
+
+    // try janky solution
+    LOG_DBG("Could not find function in collected entrypoints, attempting \"brute force\"");
+    const auto baseVA = reinterpret_cast<uintptr_t>(GetModuleHandleA(nullptr));
+    uintptr_t  va     = instruction.raw();
+    size_t     ccSeq  = 0;
+
+    while (va > baseVA)
+    {
+        --va;
+        const uint8_t b = *reinterpret_cast<uint8_t*>(va);
+
+        if (b == 0xCC && *reinterpret_cast<uint8_t*>(va - 1))
+        {
+            functionStart = Handle(va + 1);
+            return true;
+        }
+
+        if (b == 0xCC)
+        {
+            if (++ccSeq >= 2)
+            {
+                functionStart = Handle(va + ccSeq);
+                return true;
+            }
+        } else
+        {
+            ccSeq = 0;
+        }
+    }
+
+    return false;
 }
 
 bool memory::Module::findPattern(
