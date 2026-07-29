@@ -56,6 +56,7 @@ LRESULT memory::hooks::WndProc::internalWndProc(
         if (callback(hWnd, msg, wParam, lParam) == 0)
         {
             callOriginal = false;
+            break;
         }
     }
 
