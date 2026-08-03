@@ -77,6 +77,10 @@ target_include_directories(${PROJECT_NAME}
         ${CMAKE_CURRENT_SOURCE_DIR}/src
         ${minhook_SOURCE_DIR}/include
         ${json_SOURCE_DIR}/single_include
+)
+
+target_include_directories(${PROJECT_NAME}
+        PRIVATE
         ${zydis_SOURCE_DIR}/include
         ${zydis_SOURCE_DIR}/dependencies/zycore/include
 )
