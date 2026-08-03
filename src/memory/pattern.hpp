@@ -32,7 +32,7 @@ namespace memory
     class Pattern
     {
     public:
-        using Callback = std::function<bool(Handle &)>;
+        using Callback = std::function<bool(Handle&)>;
 
     private:
         std::string _name {};
@@ -71,6 +71,6 @@ namespace memory
 
         bool resolve(const Range& range, Handle& result);
     };
-}
+} // namespace memory
 
-#endif //FW_PATTERN_HPP
+#endif // FW_PATTERN_HPP

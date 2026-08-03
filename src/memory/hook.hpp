@@ -19,13 +19,13 @@ namespace memory
     public:
         [[nodiscard]] void* target() const;
 
-        template <typename T>
+        template<typename T>
         T original() const;
     };
 
     using PHook = std::shared_ptr<Hook>;
 
-    template <typename T>
+    template<typename T>
     T Hook::original() const
     {
         return reinterpret_cast<T>(_original);
@@ -50,6 +50,6 @@ namespace memory
         explicit HookScope(std::atomic_uint32_t& counter);
         ~HookScope();
     };
-}
+} // namespace memory
 
-#endif //FW_HOOK_HPP
+#endif // FW_HOOK_HPP

@@ -103,7 +103,9 @@ void fw::Settings::deserialize(const nlohmann::ordered_json& json)
     for (auto it = json.begin(); it != json.end(); ++it)
     {
         if (it.key() == "children" || it.key() == "name")
+        {
             continue;
+        }
         setKey(it.key(), it.value());
     }
 }
@@ -188,7 +190,8 @@ void fw::Settings::load()
         deserialize(json);
         LOG_INFO("Loaded settings");
         _loaded = true;
-    } catch (const std::exception&)
+    }
+    catch (const std::exception&)
     {
         LOG_WARN("Failed to deserialize settings, re-saving current state");
         lock.unlock();

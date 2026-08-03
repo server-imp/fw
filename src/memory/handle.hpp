@@ -40,13 +40,13 @@ namespace memory
 
         [[nodiscard]] const std::string& formatted() const;
 
-        template <typename T>
+        template<typename T>
         [[nodiscard]] std::enable_if_t<std::is_pointer_v<T>, T> to_ptr() const
         {
             return reinterpret_cast<T>(_pointer);
         }
 
-        template <typename T>
+        template<typename T>
         [[nodiscard]] std::enable_if_t<std::is_object_v<T>, T&> deref() const
         {
             return *to_ptr<T*>();
@@ -78,6 +78,6 @@ namespace memory
 
         static const std::string& format(const Handle& handle);
     };
-}
+} // namespace memory
 
-#endif //FW_HANDLE_HPP
+#endif // FW_HANDLE_HPP

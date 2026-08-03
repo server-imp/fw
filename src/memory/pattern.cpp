@@ -2,9 +2,9 @@
 
 #include <utility>
 
+#include "../logger.hpp"
 #include "range.hpp"
 #include "scanner.hpp"
-#include "../logger.hpp"
 #include "util.hpp"
 
 memory::PatternTransform::PatternTransform(const Type type, const intptr_t value) : type(type), value(value) {}
@@ -15,27 +15,27 @@ std::string memory::PatternTransform::toString() const
 
     switch (this->type)
     {
-        case Type::Add:
-            typeString = "Add";
-            break;
-        case Type::Subtract:
-            typeString = "Subtract";
-            break;
-        case Type::Dereference:
-            typeString = "Dereference";
-            break;
-        case Type::RipRelative:
-            typeString = "RipRelative";
-            break;
-        case Type::Match:
-            typeString = "Match";
-            break;
-        case Type::RelCall:
-            typeString = "RelCall";
-            break;
-        case Type::Callback:
-            typeString = "Callback";
-            break;
+    case Type::Add:
+        typeString = "Add";
+        break;
+    case Type::Subtract:
+        typeString = "Subtract";
+        break;
+    case Type::Dereference:
+        typeString = "Dereference";
+        break;
+    case Type::RipRelative:
+        typeString = "RipRelative";
+        break;
+    case Type::Match:
+        typeString = "Match";
+        break;
+    case Type::RelCall:
+        typeString = "RelCall";
+        break;
+    case Type::Callback:
+        typeString = "Callback";
+        break;
     }
 
     return std::format("{} [{:X}]", typeString, value);
@@ -52,7 +52,8 @@ void memory::Pattern::parseIda(const std::string& ida, std::vector<uint8_t>& dat
         {
             data.push_back(0x00);
             mask.push_back(0x00);
-        } else
+        }
+        else
         {
             data.push_back(static_cast<uint8_t>(std::stoul(token, nullptr, 16)));
             mask.push_back(0xFF);
@@ -60,19 +61,16 @@ void memory::Pattern::parseIda(const std::string& ida, std::vector<uint8_t>& dat
     }
 }
 
-memory::Pattern::Pattern(std::string name, const std::string& ida)
-    : _name(std::move(name)), _ida(ida)
+memory::Pattern::Pattern(std::string name, const std::string& ida) : _name(std::move(name)), _ida(ida)
 {
     auto& data = _data.emplace_back();
     auto& mask = _mask.emplace_back();
     parseIda(ida, data, mask);
 }
 
-memory::Pattern::Pattern(const std::string& ida)
-    : Pattern("", ida) {}
+memory::Pattern::Pattern(const std::string& ida) : Pattern("", ida) {}
 
-memory::Pattern::Pattern(std::string name, const std::initializer_list<std::string>& idas)
-    : _name(std::move(name))
+memory::Pattern::Pattern(std::string name, const std::initializer_list<std::string>& idas) : _name(std::move(name))
 {
     for (const auto& ida : idas)
     {
@@ -82,8 +80,7 @@ memory::Pattern::Pattern(std::string name, const std::initializer_list<std::stri
     }
 }
 
-memory::Pattern::Pattern(const std::initializer_list<std::string>& idas)
-    : Pattern("", idas) {}
+memory::Pattern::Pattern(const std::initializer_list<std::string>& idas) : Pattern("", idas) {}
 
 const std::string& memory::Pattern::name() const
 {
@@ -204,11 +201,7 @@ bool memory::Pattern::resolve(const Range& range, Handle& result)
             if (byte != check)
             {
                 LOG_WARN(
-                    "Transform number {} \"{}\" failed: {:02X} != {:02X}",
-                    i + 1,
-                    transform.toString(),
-                    byte,
-                    check);
+                    "Transform number {} \"{}\" failed: {:02X} != {:02X}", i + 1, transform.toString(), byte, check);
                 return false;
             }
         }
@@ -217,11 +210,10 @@ bool memory::Pattern::resolve(const Range& range, Handle& result)
         {
             if (pointer.deref<uint8_t>() != 0xE8)
             {
-                LOG_WARN(
-                    "Transform number {} \"{}\" failed: {:02X} != 0xE8",
-                    i + 1,
-                    transform.toString(),
-                    pointer.deref<uint8_t>());
+                LOG_WARN("Transform number {} \"{}\" failed: {:02X} != 0xE8",
+                         i + 1,
+                         transform.toString(),
+                         pointer.deref<uint8_t>());
                 return false;
             }
 

@@ -93,11 +93,10 @@ namespace memory
 
         bool findReference(const Handle& handle, RefData& result, RefData::Type type = RefData::Type::Any);
 
-        bool findReferences(
-            const Handle&         handle,
-            std::vector<RefData>& results,
-            RefData::Type         type = RefData::Type::Any,
-            int                   max  = 0);
+        bool findReferences(const Handle&         handle,
+                            std::vector<RefData>& results,
+                            RefData::Type         type = RefData::Type::Any,
+                            int                   max  = 0);
 
         bool findStringReference(const std::string& string, RefData& result);
 
@@ -141,6 +140,6 @@ namespace memory
 
         static Module getThis();
     };
-}
+} // namespace memory
 
-#endif //FW_MODULE_HPP
+#endif // FW_MODULE_HPP

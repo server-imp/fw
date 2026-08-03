@@ -1,7 +1,6 @@
 #include "bitset.hpp"
 
-BitSet::BitSet(const size_t size)
-    : _bits((size + 63) >> 6), _size(size) {}
+BitSet::BitSet(const size_t size) : _bits((size + 63) >> 6), _size(size) {}
 
 void BitSet::set(const size_t index)
 {
@@ -21,7 +20,9 @@ bool BitSet::claim(const size_t index)
     uint64_t& word = _bits[id];
 
     if (word & mask)
+    {
         return false;
+    }
 
     word |= mask;
     return true;
@@ -39,14 +40,18 @@ size_t BitSet::size() const
 
 void BitSet::reset()
 {
-    std::fill(_bits.begin(), _bits.end(), 0);
+    std::ranges::fill(_bits, 0);
 }
 
 void BitSet::flip()
 {
     for (auto& word : _bits)
+    {
         word = ~word;
+    }
 
     if (const size_t extra = _bits.size() * 64 - _size)
+    {
         _bits.back() &= UINT64_MAX >> extra;
+    }
 }

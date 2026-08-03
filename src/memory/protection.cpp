@@ -77,7 +77,7 @@ memory::Protection::Protection(const Handle& base, const size_t size, const DWOR
             return;
         }
 
-        _regions.emplace_back(ProtectedRegion { .range = Range(protectBegin, protectEnd), .oldProtect = oldProtect });
+        _regions.emplace_back(ProtectedRegion {.range = Range(protectBegin, protectEnd), .oldProtect = oldProtect});
 
         current = protectEnd;
     }

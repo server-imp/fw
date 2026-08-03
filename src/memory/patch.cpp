@@ -58,24 +58,26 @@ bool memory::BytePatch::internalDisable()
     return true;
 }
 
-memory::BytePatch::BytePatch(
-    const std::string&                    name,
-    const Handle&                         target,
-    const bool                            flushInstructionCache,
-    const std::initializer_list<uint8_t>& patchBytes)
-    : Toggleable(name), _target(target), _patched(patchBytes), _flushInstructionCache(flushInstructionCache) {}
+memory::BytePatch::BytePatch(const std::string&                    name,
+                             const Handle&                         target,
+                             const bool                            flushInstructionCache,
+                             const std::initializer_list<uint8_t>& patchBytes)
+    : Toggleable(name), _target(target), _patched(patchBytes), _flushInstructionCache(flushInstructionCache)
+{
+}
 
 memory::BytePatch::~BytePatch()
 {
     if (enabled())
+    {
         disable();
+    }
 }
 
-std::shared_ptr<memory::BytePatch> memory::BytePatch::create(
-    const std::string&                    name,
-    const Handle&                         target,
-    bool                                  flushInstructionCache,
-    const std::initializer_list<uint8_t>& patchBytes)
+std::shared_ptr<memory::BytePatch> memory::BytePatch::create(const std::string& name,
+                                                             const Handle&      target,
+                                                             bool               flushInstructionCache,
+                                                             const std::initializer_list<uint8_t>& patchBytes)
 {
     return std::make_shared<BytePatch>(name, target, flushInstructionCache, patchBytes);
 }
@@ -119,7 +121,9 @@ disable:
     for (const auto& patch : _patches)
     {
         if (patch->enabled())
+        {
             patch->disable();
+        }
     }
 
     if (logging::Logger::instance())
@@ -159,7 +163,9 @@ enable:
     for (const auto& patch : _patches)
     {
         if (!patch->enabled())
+        {
             patch->enable();
+        }
     }
 
     if (logging::Logger::instance())
@@ -170,11 +176,10 @@ enable:
     return false;
 }
 
-memory::RefNopPatch::RefNopPatch(
-    const std::string&  name,
-    Module&             module,
-    const Handle&       target,
-    const RefData::Type refType)
+memory::RefNopPatch::RefNopPatch(const std::string&  name,
+                                 Module&             module,
+                                 const Handle&       target,
+                                 const RefData::Type refType)
     : Toggleable(name)
 {
     std::vector<RefData> refs {};
@@ -197,14 +202,13 @@ memory::RefNopPatch::RefNopPatch(
 memory::RefNopPatch::~RefNopPatch()
 {
     if (enabled())
+    {
         disable();
+    }
 }
 
-std::shared_ptr<memory::RefNopPatch> memory::RefNopPatch::create(
-    const std::string& name,
-    Module&            module,
-    const Handle&      target,
-    RefData::Type      refType)
+std::shared_ptr<memory::RefNopPatch>
+memory::RefNopPatch::create(const std::string& name, Module& module, const Handle& target, RefData::Type refType)
 {
     return std::make_shared<RefNopPatch>(name, module, target, refType);
 }
@@ -243,8 +247,7 @@ bool memory::StringRefPatch::internalDisable()
     return true;
 }
 
-memory::StringRefPatch::StringRefPatch(std::string name, const RefData& ref)
-    : Toggleable(std::move(name))
+memory::StringRefPatch::StringRefPatch(std::string name, const RefData& ref) : Toggleable(std::move(name))
 {
     _lea            = ref.instruction();
     _originalString = ref.reference();
@@ -253,7 +256,9 @@ memory::StringRefPatch::StringRefPatch(std::string name, const RefData& ref)
 memory::StringRefPatch::~StringRefPatch()
 {
     if (enabled())
+    {
         disable();
+    }
 }
 
 void memory::StringRefPatch::setString(const std::string& string)

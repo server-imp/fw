@@ -4,16 +4,16 @@ const char* logging::logLevelToString(const LogLevel level)
 {
     switch (level)
     {
-        case LogLevel::Debug:
-            return " DBG";
-        case LogLevel::Info:
-            return "INFO";
-        case LogLevel::Warning:
-            return "WARN";
-        case LogLevel::Error:
-            return " ERR";
-        default:
-            return " UNK";
+    case LogLevel::Debug:
+        return " DBG";
+    case LogLevel::Info:
+        return "INFO";
+    case LogLevel::Warning:
+        return "WARN";
+    case LogLevel::Error:
+        return " ERR";
+    default:
+        return " UNK";
     }
 }
 
@@ -24,11 +24,10 @@ logging::Logger* logging::Logger::instance()
     return _instance;
 }
 
-logging::Logger::Logger(
-    const std::string&           name,
-    const std::filesystem::path& path,
-    const LogLevel               level,
-    const bool                   console)
+logging::Logger::Logger(const std::string&           name,
+                        const std::filesystem::path& path,
+                        const LogLevel               level,
+                        const bool                   console)
 {
     _name = name;
     _path = path;
@@ -47,13 +46,15 @@ logging::Logger::Logger(
         setConsole(true);
     }
 
-    if (logging::Logger::instance())
-        logging::Logger::instance()->log(
-            logging::LogLevel::Debug,
-            "[{}:{}\t{}()]\t" "Initialized",
-            util::getFileName(__FILE__),
-            __LINE__,
-            __func__);
+    if (instance())
+    {
+        instance()->log(LogLevel::Debug,
+                        "[{}:{}\t{}()]\t"
+                        "Initialized",
+                        util::getFileName(__FILE__),
+                        __LINE__,
+                        __func__);
+    }
 }
 
 logging::Logger::~Logger()
@@ -95,15 +96,11 @@ void logging::Logger::unregisterCallback(const LogCallback& callback)
 {
     std::lock_guard lock(_mutex);
 
-    _callbacks.erase(
-        std::remove_if(
-            _callbacks.begin(),
-            _callbacks.end(),
-            [&](const LogCallback& cb)
-            {
-                return cb.target<void(const LogEntry&)>() == callback.target<void(const LogEntry&)>();
-            }),
-        _callbacks.end());
+    std::erase_if(_callbacks,
+                  [&](const LogCallback& cb)
+                  {
+                      return cb.target<void(const LogEntry&)>() == callback.target<void(const LogEntry&)>();
+                  });
 }
 
 bool logging::Logger::setConsole(const bool value)

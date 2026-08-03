@@ -1,13 +1,12 @@
 #include "scanner.hpp"
-#include "pattern.hpp"
 #include "../logger.hpp"
+#include "pattern.hpp"
 #include "util.hpp"
 
-bool memory::Scanner::findPattern(
-    const Range&                range,
-    const std::vector<uint8_t>& data,
-    const std::vector<uint8_t>& mask,
-    Handle&                     result)
+bool memory::Scanner::findPattern(const Range&                range,
+                                  const std::vector<uint8_t>& data,
+                                  const std::vector<uint8_t>& mask,
+                                  Handle&                     result)
 {
     LOG_DBG("Looking for pattern in range [{}, {}]", range.start().formatted(), range.end().formatted());
 
@@ -41,7 +40,9 @@ bool memory::Scanner::findPattern(
         for (size_t j = 0; j < patternSize; ++j)
         {
             if (!mask[j])
+            {
                 continue;
+            }
 
             if (start[i + j] != data[j])
             {

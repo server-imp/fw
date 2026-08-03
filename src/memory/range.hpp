@@ -41,6 +41,6 @@ namespace memory
 
         bool operator==(const Range& other) const noexcept;
     };
-}
+} // namespace memory
 
-#endif //FW_RANGE_HPP
+#endif // FW_RANGE_HPP

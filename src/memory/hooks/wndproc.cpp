@@ -4,10 +4,8 @@ memory::hooks::WndProc* memory::hooks::WndProc::_instance {};
 
 bool memory::hooks::WndProc::internalEnable()
 {
-    _originalWndProc = reinterpret_cast<WNDPROC>(SetWindowLongPtr(
-        _hWnd,
-        GWLP_WNDPROC,
-        reinterpret_cast<LONG_PTR>(wndProc)));
+    _originalWndProc =
+        reinterpret_cast<WNDPROC>(SetWindowLongPtr(_hWnd, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(wndProc)));
 
     if (!_originalWndProc)
     {
@@ -24,8 +22,7 @@ bool memory::hooks::WndProc::internalDisable()
     return true;
 }
 
-memory::hooks::WndProc::WndProc(HWND hWnd)
-    : Hook("WndProc Hook", nullptr, nullptr, nullptr)
+memory::hooks::WndProc::WndProc(HWND hWnd) : Hook("WndProc Hook", nullptr, nullptr, nullptr)
 {
     _instance = this;
     _hWnd     = hWnd;
@@ -34,7 +31,9 @@ memory::hooks::WndProc::WndProc(HWND hWnd)
 memory::hooks::WndProc::~WndProc()
 {
     if (enabled())
+    {
         disable();
+    }
     _instance = nullptr;
 }
 
@@ -43,11 +42,8 @@ void memory::hooks::WndProc::addCallback(const std::function<uintptr_t(HWND, UIN
     _callbacks.push_back(callback);
 }
 
-LRESULT memory::hooks::WndProc::internalWndProc(
-    HWND         hWnd,
-    const UINT   msg,
-    const WPARAM wParam,
-    const LPARAM lParam) const
+LRESULT
+memory::hooks::WndProc::internalWndProc(HWND hWnd, const UINT msg, const WPARAM wParam, const LPARAM lParam) const
 {
     auto callOriginal = true;
 

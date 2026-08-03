@@ -177,7 +177,8 @@ const std::string& memory::Handle::format(const Handle& handle)
     if (Module module {}; Module::tryGetByAddr(handle, module))
     {
         result = std::format("{}+{:X}", module.name(), handle.sub(module.start()).raw());
-    } else
+    }
+    else
     {
         result = std::format("{:08X}", handle.raw());
     }

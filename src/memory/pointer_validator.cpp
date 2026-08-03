@@ -1,7 +1,5 @@
 #include "pointer_validator.hpp"
 
-#include "logger.hpp"
-
 bool memory::PointerValidator::probe(const uintptr_t pointer)
 {
     MEMORY_BASIC_INFORMATION mbi {};
@@ -24,9 +22,10 @@ bool memory::PointerValidator::updateCacheItem(const uintptr_t pointer, const ui
     {
         it->second.expireTime = expireTime;
         it->second.valid      = valid;
-    } else
+    }
+    else
     {
-        _cache.emplace(pointer, CacheEntry { .expireTime = expireTime, .valid = valid });
+        _cache.emplace(pointer, CacheEntry {.expireTime = expireTime, .valid = valid});
     }
 
     return valid;

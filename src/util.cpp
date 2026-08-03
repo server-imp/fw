@@ -6,28 +6,24 @@
 
 void util::ltrim(std::string& s)
 {
-    s.erase(
-        s.begin(),
-        std::find_if(
-            s.begin(),
-            s.end(),
-            [](const unsigned char ch)
-            {
-                return !isspace(ch);
-            }));
+    s.erase(s.begin(),
+            std::ranges::find_if(s,
+                                 [](const unsigned char ch)
+                                 {
+                                     return !isspace(ch);
+                                 }));
 }
 
 void util::rtrim(std::string& s)
 {
-    s.erase(
-        std::find_if(
-            s.rbegin(),
-            s.rend(),
-            [](const unsigned char ch)
-            {
-                return !isspace(ch);
-            }).base(),
-        s.end());
+    s.erase(std::find_if(s.rbegin(),
+                         s.rend(),
+                         [](const unsigned char ch)
+                         {
+                             return !isspace(ch);
+                         })
+                .base(),
+            s.end());
 }
 
 void util::trim(std::string& s)
@@ -94,14 +90,12 @@ std::vector<std::string> util::readLines(const std::filesystem::path& filePath)
 
 std::string util::tolower(std::string s)
 {
-    std::transform(
-        s.begin(),
-        s.end(),
-        s.begin(),
-        [](const unsigned char c) -> char
-        {
-            return static_cast<char>(std::tolower(c));
-        });
+    std::ranges::transform(s,
+                           s.begin(),
+                           [](const unsigned char c) -> char
+                           {
+                               return static_cast<char>(std::tolower(c));
+                           });
 
     return s;
 }
@@ -113,7 +107,7 @@ bool util::emptyOrWhitespace(const std::string& s)
         return true;
     }
 
-    return std::all_of(s.begin(), s.end(), isspace);
+    return std::ranges::all_of(s, isspace);
 }
 
 bool util::getModuleFilePath(const HMODULE hModule, std::filesystem::path& path)
@@ -180,14 +174,13 @@ bool util::equalsIgnoreCase(const std::string& a, const std::string& b)
         return false;
     }
 
-    return std::equal(
-        a.begin(),
-        a.end(),
-        b.begin(),
-        [](const char c1, const char c2)
-        {
-            return std::tolower(c1) == std::tolower(c2);
-        });
+    return std::equal(a.begin(),
+                      a.end(),
+                      b.begin(),
+                      [](const char c1, const char c2)
+                      {
+                          return std::tolower(c1) == std::tolower(c2);
+                      });
 }
 
 bool util::equalsIgnoreCase(const std::wstring& a, const std::wstring& b)
@@ -197,14 +190,13 @@ bool util::equalsIgnoreCase(const std::wstring& a, const std::wstring& b)
         return false;
     }
 
-    return std::equal(
-        a.begin(),
-        a.end(),
-        b.begin(),
-        [](const wchar_t c1, const wchar_t c2)
-        {
-            return std::towlower(c1) == std::towlower(c2);
-        });
+    return std::equal(a.begin(),
+                      a.end(),
+                      b.begin(),
+                      [](const wchar_t c1, const wchar_t c2)
+                      {
+                          return std::towlower(c1) == std::towlower(c2);
+                      });
 }
 
 bool util::closeHandle(HANDLE& hObject)
@@ -357,13 +349,11 @@ bool util::isModuleInAnyDirsRelativeToExe(const HMODULE hModule, const std::init
     }
     path = path.parent_path();
 
-    return std::any_of(
-        relativeDirs.begin(),
-        relativeDirs.end(),
-        [&](const std::string& dir)
-        {
-            return isModuleInDir(hModule, dir.empty() ? path : path / dir);
-        });
+    return std::ranges::any_of(relativeDirs,
+                               [&](const std::string& dir)
+                               {
+                                   return isModuleInDir(hModule, dir.empty() ? path : path / dir);
+                               });
 }
 
 memory::Handle util::getVirtualFunctionAddress(void* object, const std::size_t offset)
@@ -422,7 +412,7 @@ bool util::isValidGuildWars2Name(const wchar_t* name)
 
     if (length >= 4 && name[0] == L'g' && name[1] == L'w' && name[2] == L'2' && name[3] == L':')
     {
-        name   += 4;
+        name += 4;
         length -= 4;
     }
 
@@ -452,10 +442,14 @@ bool util::looksLikeAscii(const memory::Handle& handle, const size_t minLen, con
     {
         const auto c = static_cast<uint8_t>(p[i]);
         if (c == '\0')
+        {
             return i >= minLen;
+        }
 
         if (c < 0x20 || c > 0x7E)
+        {
             return false;
+        }
     }
     return false;
 }
@@ -468,10 +462,14 @@ bool util::looksLikeUtf16Ascii(const memory::Handle& handle, const size_t minLen
     {
         const uint16_t c = p[i];
         if (c == 0)
+        {
             return i >= minLen;
+        }
 
         if (c < 0x20 || c > 0x7E)
+        {
             return false;
+        }
     }
     return false;
 }

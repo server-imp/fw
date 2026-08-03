@@ -35,7 +35,7 @@ namespace memory
 
         bool validate(void* pointer);
 
-        template <typename T>
+        template<typename T>
         std::enable_if_t<std::is_pointer_v<T>, bool> dereference(T pointer, T* result);
 
         void clearCache();
@@ -43,7 +43,7 @@ namespace memory
         static PointerValidator& instance();
     };
 
-    template <typename T>
+    template<typename T>
     std::enable_if_t<std::is_pointer_v<T>, bool> PointerValidator::dereference(T pointer, T* result)
     {
         if (!validate(pointer))
@@ -54,9 +54,9 @@ namespace memory
         *result = pointer;
         return true;
     }
-}
+} // namespace memory
 
-#define VALIDATE(pointer) memory::PointerValidator::instance().validate((uintptr_t)pointer)
+#define VALIDATE(pointer)            memory::PointerValidator::instance().validate((uintptr_t)pointer)
 #define DEREFERENCE(pointer, result) memory::PointerValidator::instance().dereference(pointer, result)
 
-#endif //FW_POINTER_VALIDATOR_HPP
+#endif // FW_POINTER_VALIDATOR_HPP

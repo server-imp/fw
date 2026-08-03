@@ -33,14 +33,13 @@ namespace memory
 
             std::atomic_bool _shuttingDown {};
 
-            D3D11(
-                HWND                                     hWnd,
-                void*                                    presentPtr,
-                void*                                    resizeBuffersPtr,
-                const std::function<void()>&             cbPresent,
-                const std::function<void(D3D11*, bool)>& cbResizeBuffers,
-                const std::function<bool(D3D11*)>&       cbStarted,
-                const std::function<void(D3D11*)>&       cbShutdown);
+            D3D11(HWND                                     hWnd,
+                  void*                                    presentPtr,
+                  void*                                    resizeBuffersPtr,
+                  const std::function<void()>&             cbPresent,
+                  const std::function<void(D3D11*, bool)>& cbResizeBuffers,
+                  const std::function<bool(D3D11*)>&       cbStarted,
+                  const std::function<void(D3D11*)>&       cbShutdown);
 
             std::atomic_uint32_t _presentInFlight {};
             std::atomic_uint32_t _resizeBuffersInFlight {};
@@ -60,13 +59,13 @@ namespace memory
 
             [[nodiscard]] HWND hWnd() const;
 
-            static std::optional<std::unique_ptr<D3D11>> create(
-                const std::string&                       windowClassName,
-                const std::string&                       windowName,
-                const std::function<void()>&             cbPresent,
-                const std::function<void(D3D11*, bool)>& cbResizeBuffers,
-                const std::function<bool(D3D11*)>&       cbStarted,
-                const std::function<void(D3D11*)>&       cbShutdown);
+            static std::optional<std::unique_ptr<D3D11>>
+            create(const std::string&                       windowClassName,
+                   const std::string&                       windowName,
+                   const std::function<void()>&             cbPresent,
+                   const std::function<void(D3D11*, bool)>& cbResizeBuffers,
+                   const std::function<bool(D3D11*)>&       cbStarted,
+                   const std::function<void(D3D11*)>&       cbShutdown);
 
         private:
             bool createRenderTarget(IDXGISwapChain* swapChain);
@@ -75,25 +74,23 @@ namespace memory
 
             HRESULT internalPresent(IDXGISwapChain* swapChain, UINT syncInterval, UINT flags);
 
-            HRESULT internalResizeBuffers(
-                IDXGISwapChain* swapChain,
-                UINT            bufferCount,
-                UINT            width,
-                UINT            height,
-                DXGI_FORMAT     newFormat,
-                UINT            swapChainFlags);
+            HRESULT internalResizeBuffers(IDXGISwapChain* swapChain,
+                                          UINT            bufferCount,
+                                          UINT            width,
+                                          UINT            height,
+                                          DXGI_FORMAT     newFormat,
+                                          UINT            swapChainFlags);
 
             static HRESULT present(IDXGISwapChain* swapChain, UINT syncInterval, UINT flags);
 
-            static HRESULT resizeBuffers(
-                IDXGISwapChain* swapChain,
-                UINT            bufferCount,
-                UINT            width,
-                UINT            height,
-                DXGI_FORMAT     newFormat,
-                UINT            swapChainFlags);
+            static HRESULT resizeBuffers(IDXGISwapChain* swapChain,
+                                         UINT            bufferCount,
+                                         UINT            width,
+                                         UINT            height,
+                                         DXGI_FORMAT     newFormat,
+                                         UINT            swapChainFlags);
         };
-    }
-}
+    } // namespace hooks
+} // namespace memory
 
-#endif //FW_D3D11_HPP
+#endif // FW_D3D11_HPP

@@ -12,7 +12,7 @@ bool memory::tryNearAlloc(const Handle& target, const size_t size, Handle& resul
 
     for (uintptr_t offset = 0; offset < maxOffset; offset += granularity)
     {
-        for (const int sign : { -1, 1 })
+        for (const int sign : {-1, 1})
         {
             const uintptr_t tryAddr = base + sign * offset;
 
@@ -25,11 +25,8 @@ bool memory::tryNearAlloc(const Handle& target, const size_t size, Handle& resul
                 continue;
             }
 
-            if (void* p = VirtualAlloc(
-                reinterpret_cast<void*>(tryAddr),
-                size,
-                MEM_RESERVE | MEM_COMMIT,
-                PAGE_READWRITE))
+            if (void* p =
+                    VirtualAlloc(reinterpret_cast<void*>(tryAddr), size, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE))
             {
                 result = Handle(p);
                 LOG_DBG("Successful allocation at {:08X}", result.raw());
@@ -42,11 +39,10 @@ bool memory::tryNearAlloc(const Handle& target, const size_t size, Handle& resul
     return false;
 }
 
-bool memory::locateAllPointers(
-    const Handle&        base,
-    const size_t         largestOffset,
-    const Handle&        target,
-    std::vector<Handle>& results)
+bool memory::locateAllPointers(const Handle&        base,
+                               const size_t         largestOffset,
+                               const Handle&        target,
+                               std::vector<Handle>& results)
 {
     results.clear();
 

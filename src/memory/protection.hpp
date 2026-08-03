@@ -32,6 +32,6 @@ namespace memory
 
         [[nodiscard]] const std::vector<ProtectedRegion>& regions() const;
     };
-}
+} // namespace memory
 
-#endif //FW_PROTECTION_HPP
+#endif // FW_PROTECTION_HPP

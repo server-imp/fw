@@ -20,19 +20,17 @@ namespace memory
         bool internalDisable() override;
 
     public:
-        explicit BytePatch(
-            const std::string&                    name,
-            const Handle&                         target,
-            bool                                  flushInstructionCache,
-            const std::initializer_list<uint8_t>& patchBytes);
+        explicit BytePatch(const std::string&                    name,
+                           const Handle&                         target,
+                           bool                                  flushInstructionCache,
+                           const std::initializer_list<uint8_t>& patchBytes);
 
         ~BytePatch() override;
 
-        static std::shared_ptr<BytePatch> create(
-            const std::string&                    name,
-            const Handle&                         target,
-            bool                                  flushInstructionCache,
-            const std::initializer_list<uint8_t>& patchBytes);
+        static std::shared_ptr<BytePatch> create(const std::string&                    name,
+                                                 const Handle&                         target,
+                                                 bool                                  flushInstructionCache,
+                                                 const std::initializer_list<uint8_t>& patchBytes);
     };
 
     class NopPatch : public BytePatch
@@ -56,11 +54,8 @@ namespace memory
 
         ~RefNopPatch() override;
 
-        static std::shared_ptr<RefNopPatch> create(
-            const std::string& name,
-            Module&            module,
-            const Handle&      target,
-            RefData::Type      refType);
+        static std::shared_ptr<RefNopPatch>
+        create(const std::string& name, Module& module, const Handle& target, RefData::Type refType);
     };
 
     class StringRefPatch : public Toggleable
@@ -86,6 +81,6 @@ namespace memory
 
         static std::shared_ptr<StringRefPatch> create(const std::string& name, const RefData& lea);
     };
-}
+} // namespace memory
 
-#endif //FW_PATCH_HPP
+#endif // FW_PATCH_HPP

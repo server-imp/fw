@@ -1,8 +1,7 @@
 #include "toggleable.hpp"
 #include "logger.hpp"
 
-Toggleable::Toggleable(std::string name)
-    : _name(std::move(name)) {}
+Toggleable::Toggleable(std::string name) : _name(std::move(name)) {}
 
 const std::string& Toggleable::name() const
 {

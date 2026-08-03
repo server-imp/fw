@@ -2,9 +2,8 @@
 
 #include "hook.hpp"
 
-#include "handle.hpp"
-#include "module.hpp"
 #include "../logger.hpp"
+#include "handle.hpp"
 #include "util.hpp"
 
 memory::Hook::Hook(std::string name, void* target, void* original, void* ownFunction)
@@ -22,12 +21,16 @@ void* memory::Hook::target() const
 }
 
 memory::Detour::Detour(std::string name, void* target, void* ownFunction)
-    : Hook(std::move(name), target, nullptr, ownFunction) {}
+    : Hook(std::move(name), target, nullptr, ownFunction)
+{
+}
 
 memory::Detour::~Detour()
 {
     if (enabled())
+    {
         disable();
+    }
 }
 
 bool memory::Detour::internalEnable()
@@ -75,8 +78,7 @@ bool memory::Detour::internalDisable()
     return true;
 }
 
-memory::HookScope::HookScope(std::atomic_uint32_t& counter)
-    : counter(counter)
+memory::HookScope::HookScope(std::atomic_uint32_t& counter) : counter(counter)
 {
     counter.fetch_add(1, std::memory_order_acq_rel);
 }

@@ -15,11 +15,10 @@ namespace memory
 
         Scanner& operator=(const Scanner&) = delete;
 
-        static bool findPattern(
-            const Range&                range,
-            const std::vector<uint8_t>& data,
-            const std::vector<uint8_t>& mask,
-            Handle&                     result);
+        static bool findPattern(const Range&                range,
+                                const std::vector<uint8_t>& data,
+                                const std::vector<uint8_t>& mask,
+                                Handle&                     result);
 
         static bool findString(const std::string& string, const Range& range, Handle& result);
 
@@ -27,6 +26,6 @@ namespace memory
 
         static bool findWstringReference(const std::wstring& string, Handle& result);
     };
-}
+} // namespace memory
 
-#endif //FW_SCANNER_HPP
+#endif // FW_SCANNER_HPP

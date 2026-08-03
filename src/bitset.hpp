@@ -19,4 +19,4 @@ public:
     void                 flip();
 };
 
-#endif //FW_BITSET_HPP
+#endif // FW_BITSET_HPP

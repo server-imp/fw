@@ -8,21 +8,21 @@
 #define NOMINMAX
 #endif
 
-#include <windows.h>
-#include <shellapi.h>
+#include <atomic>
+#include <chrono>
+#include <cwctype>
+#include <d3d11.h>
+#include <format>
+#include <fstream>
 #include <functional>
+#include <psapi.h>
+#include <shellapi.h>
+#include <string>
+#include <thread>
 #include <unordered_set>
 #include <variant>
-#include <psapi.h>
-#include <fstream>
-#include <d3d11.h>
-#include <cwctype>
-#include <format>
 #include <vector>
-#include <chrono>
-#include <thread>
-#include <atomic>
-#include <string>
+#include <windows.h>
 
 #include <deque>
 #include <mutex>
@@ -30,7 +30,7 @@
 using namespace std::chrono_literals;
 
 #include <MinHook.h>
-#include <nlohmann/json.hpp>
 #include <Zydis/Zydis.h>
+#include <nlohmann/json.hpp>
 
-#endif //FW_PCH_HPP
+#endif // FW_PCH_HPP

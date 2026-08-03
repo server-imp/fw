@@ -45,11 +45,10 @@ namespace logging
     public:
         static Logger* instance();
 
-        explicit Logger(
-            const std::string&           name,
-            const std::filesystem::path& path,
-            LogLevel                     level   = LogLevel::Debug,
-            bool                         console = false);
+        explicit Logger(const std::string&           name,
+                        const std::filesystem::path& path,
+                        LogLevel                     level   = LogLevel::Debug,
+                        bool                         console = false);
 
         ~Logger();
 
@@ -61,7 +60,7 @@ namespace logging
 
         void unregisterCallback(const LogCallback& callback);
 
-        template <typename... Args>
+        template<typename... Args>
         void log(LogLevel level, std::format_string<Args...> format, Args&&... args);
 
         bool setConsole(bool value);
@@ -72,7 +71,7 @@ namespace logging
         void printLogEntry(const LogEntry& entry, bool toFile = true);
     };
 
-    template <typename... Args>
+    template<typename... Args>
     void Logger::log(LogLevel level, const std::format_string<Args...> format, Args&&... args)
     {
         if (level < _level)
@@ -93,7 +92,8 @@ namespace logging
         try
         {
             message = std::format(format, std::forward<Args>(args)...);
-        } catch (const std::exception& e)
+        }
+        catch (const std::exception& e)
         {
             message = std::format("Error formatting log message \"{}\": {}", std::string_view(format.get()), e.what());
 
@@ -106,19 +106,52 @@ namespace logging
         {
             _recentEntries.pop_front();
         }
-        _recentEntries.push_back({ .timestamp = timestamp, .level = level, .message = message });
+        _recentEntries.push_back({.timestamp = timestamp, .level = level, .message = message});
 
         const auto& entry = _recentEntries.back();
 
         printLogEntry(entry);
         runCallbacks(entry);
     }
-}
+} // namespace logging
 
-#define DBG() if (logging::Logger::instance()) logging::Logger::instance()->log(logging::LogLevel::Debug, "[{}:{}\t{}()]", util::getFileName(__FILE__), __LINE__, __func__)
-#define LOG_DBG(fmt, ...) if (logging::Logger::instance()) logging::Logger::instance()->log(logging::LogLevel::Debug, "[{}:{}\t{}()]\t" fmt, util::getFileName(__FILE__), __LINE__, __func__, ##__VA_ARGS__)
-#define LOG_INFO(fmt, ...) if (logging::Logger::instance()) logging::Logger::instance()->log(logging::LogLevel::Info, " " fmt, ##__VA_ARGS__)
-#define LOG_WARN(fmt, ...) if (logging::Logger::instance()) logging::Logger::instance()->log(logging::LogLevel::Warning, "[{}:{}\t{}()]\t" fmt, util::getFileName(__FILE__), __LINE__, __func__, ##__VA_ARGS__)
-#define LOG_ERR(fmt, ...) if (logging::Logger::instance()) logging::Logger::instance()->log(logging::LogLevel::Error, "[{}:{}\t{}()]\t" fmt, util::getFileName(__FILE__), __LINE__, __func__, ##__VA_ARGS__)
+#define LOG_DBG(fmt, ...)                                             \
+    if (logging::Logger::instance())                                  \
+    {                                                                 \
+        logging::Logger::instance()->log(logging::LogLevel::Debug,    \
+                                         "[{}:{}\t{}()]\t" fmt,       \
+                                         util::getFileName(__FILE__), \
+                                         __LINE__,                    \
+                                         __func__,                    \
+                                         ##__VA_ARGS__);              \
+    }
 
-#endif //FW_LOGGER_HPP
+#define LOG_INFO(fmt, ...)                                                                               \
+    if (logging::Logger::instance())                                                                     \
+    {                                                                                                    \
+        logging::Logger::instance()->log(logging::LogLevel::Info, " " fmt, ##__VA_ARGS__); \
+    }
+
+#define LOG_WARN(fmt, ...)                                             \
+    if (logging::Logger::instance())                                  \
+    {                                                                 \
+        logging::Logger::instance()->log(logging::LogLevel::Warning,    \
+                                         "[{}:{}\t{}()]\t" fmt,       \
+                                         util::getFileName(__FILE__), \
+                                         __LINE__,                    \
+                                         __func__,                    \
+                                         ##__VA_ARGS__);              \
+    }
+
+#define LOG_ERR(fmt, ...)                                             \
+    if (logging::Logger::instance())                                  \
+    {                                                                 \
+        logging::Logger::instance()->log(logging::LogLevel::Error,    \
+                                         "[{}:{}\t{}()]\t" fmt,       \
+                                         util::getFileName(__FILE__), \
+                                         __LINE__,                    \
+                                         __func__,                    \
+                                         ##__VA_ARGS__);              \
+    }
+
+#endif // FW_LOGGER_HPP

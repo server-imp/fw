@@ -32,7 +32,7 @@ namespace memory
 
             static LRESULT CALLBACK wndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
         };
-    }
-}
+    } // namespace hooks
+} // namespace memory
 
-#endif //FW_WNDPROC_HPP
+#endif // FW_WNDPROC_HPP

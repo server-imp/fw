@@ -7,16 +7,16 @@ namespace fw
 {
     class Settings;
 
-    template <typename T>
+    template<typename T>
     class Setting;
 
-    using SettingVariant = std::variant<std::unique_ptr<Setting<int>>, std::unique_ptr<Setting<float>>, std::unique_ptr<
-                                            Setting<bool>>>;
+    using SettingVariant =
+        std::variant<std::unique_ptr<Setting<int>>, std::unique_ptr<Setting<float>>, std::unique_ptr<Setting<bool>>>;
     using SettingRefVariant = std::variant<Setting<int>*, Setting<float>*, Setting<bool>*>;
 
-    using OnSettingChangedFn = void(*)(SettingRefVariant&);
+    using OnSettingChangedFn = void (*)(SettingRefVariant&);
 
-    template <typename T>
+    template<typename T>
     class Setting
     {
     protected:
@@ -34,11 +34,10 @@ namespace fw
         virtual ~Setting() = default;
 
         Setting(Settings* owner, T value, std::string name, std::string description)
-            : _owner(owner),
-              _value(value),
-              _default(value),
-              _name(std::move(name)),
-              _description(std::move(description)) {}
+            : _owner(owner), _value(value), _default(value), _name(std::move(name)),
+              _description(std::move(description))
+        {
+        }
 
         [[nodiscard]] const std::string& name() const;
         [[nodiscard]] const std::string& description() const;
@@ -77,7 +76,7 @@ namespace fw
         [[nodiscard]] nlohmann::ordered_json serialize() const;
         void                                 deserialize(const nlohmann::ordered_json& json);
 
-        template <typename T, typename... Args>
+        template<typename T, typename... Args>
         Setting<T>& add(Args&&... args)
         {
             auto        ptr = std::make_unique<Setting<T>>(this, std::forward<Args>(args)...);
@@ -86,7 +85,7 @@ namespace fw
             return ref;
         }
 
-        template <typename T, typename... Args>
+        template<typename T, typename... Args>
         T& addChild(Args&&... args)
         {
             static_assert(std::is_base_of_v<Settings, T>, "Child must derive from Settings");
@@ -102,7 +101,7 @@ namespace fw
         }
 
     public:
-        virtual  ~Settings() = default;
+        virtual ~Settings() = default;
         explicit Settings(Settings* owner = nullptr, std::string name = "", std::filesystem::path filePath = "");
 
         void needSave();
@@ -117,19 +116,19 @@ namespace fw
         std::vector<std::unique_ptr<Settings>>& children();
     };
 
-    template <typename T>
+    template<typename T>
     const std::string& Setting<T>::name() const
     {
         return _name;
     }
 
-    template <typename T>
+    template<typename T>
     const std::string& Setting<T>::description() const
     {
         return _description;
     }
 
-    template <typename T>
+    template<typename T>
     T Setting<T>::set(T value, const bool save)
     {
         _value.store(value, std::memory_order_relaxed);
@@ -153,23 +152,24 @@ namespace fw
         return value;
     }
 
-    template <typename T>
+    template<typename T>
     T Setting<T>::get() const
     {
         if constexpr (std::is_trivially_copyable_v<T>)
         {
             return _value.load(std::memory_order_relaxed);
-        } else
+        }
+        else
         {
             return _value;
         }
     }
 
-    template <typename T>
+    template<typename T>
     T Setting<T>::defaultValue() const
     {
         return _default;
     }
-}
+} // namespace fw
 
-#endif //FW_SETTINGS_HPP
+#endif // FW_SETTINGS_HPP

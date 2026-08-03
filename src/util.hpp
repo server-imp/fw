@@ -10,37 +10,55 @@ namespace memory
 }
 
 /// Evaluates to true only once per call site.
-#define TRIGGER_ONCE []() -> bool { static bool once = false; if (once) return false; once = true; return true; }()
+#define TRIGGER_ONCE              \
+    []() -> bool                  \
+    {                             \
+        static bool once = false; \
+        if (once)                 \
+        {                         \
+            return false;         \
+        }                         \
+        once = true;              \
+        return true;              \
+    }()
 
 /// Evaluates to true every `ms` milliseconds.
 /// The first call returns true immediately.
-#define TRIGGER_EVERY_MS_IMMEDIATE(ms) \
-([]() -> bool { \
-static std::atomic<ULONGLONG> last{0}; \
-ULONGLONG now = GetTickCount64(); \
-ULONGLONG prev = last.load(std::memory_order_relaxed); \
-if (now - prev >= (ms)) { \
-if (last.compare_exchange_strong(prev, now, std::memory_order_relaxed)) { \
-return true; \
-} \
-} \
-return false; \
-}())
+#define TRIGGER_EVERY_MS_IMMEDIATE(ms)                                                  \
+    (                                                                                   \
+        []() -> bool                                                                    \
+        {                                                                               \
+            static std::atomic<ULONGLONG> last {0};                                     \
+            ULONGLONG                     now  = GetTickCount64();                      \
+            ULONGLONG                     prev = last.load(std::memory_order_relaxed);  \
+            if (now - prev >= (ms))                                                     \
+            {                                                                           \
+                if (last.compare_exchange_strong(prev, now, std::memory_order_relaxed)) \
+                {                                                                       \
+                    return true;                                                        \
+                }                                                                       \
+            }                                                                           \
+            return false;                                                               \
+        }())
 
 /// Evaluates to true every `ms` milliseconds.
 /// The first call waits until the interval has elapsed.
-#define TRIGGER_EVERY_MS(ms) \
-([]() -> bool { \
-static std::atomic<ULONGLONG> last{GetTickCount64()}; \
-ULONGLONG now = GetTickCount64(); \
-ULONGLONG prev = last.load(std::memory_order_relaxed); \
-if (now - prev >= (ms)) { \
-if (last.compare_exchange_strong(prev, now, std::memory_order_relaxed)) { \
-return true; \
-} \
-} \
-return false; \
-}())
+#define TRIGGER_EVERY_MS(ms)                                                            \
+    (                                                                                   \
+        []() -> bool                                                                    \
+        {                                                                               \
+            static std::atomic<ULONGLONG> last {GetTickCount64()};                      \
+            ULONGLONG                     now  = GetTickCount64();                      \
+            ULONGLONG                     prev = last.load(std::memory_order_relaxed);  \
+            if (now - prev >= (ms))                                                     \
+            {                                                                           \
+                if (last.compare_exchange_strong(prev, now, std::memory_order_relaxed)) \
+                {                                                                       \
+                    return true;                                                        \
+                }                                                                       \
+            }                                                                           \
+            return false;                                                               \
+        }())
 
 namespace util
 {
@@ -113,6 +131,6 @@ namespace util
 
     bool looksLikeAscii(const memory::Handle& handle, size_t minLen = 5, size_t maxLen = 96);
     bool looksLikeUtf16Ascii(const memory::Handle& handle, size_t minLen = 5, size_t maxLen = 96);
-}
+} // namespace util
 
-#endif //FW_UTIL_HPP
+#endif // FW_UTIL_HPP

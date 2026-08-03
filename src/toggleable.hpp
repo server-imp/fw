@@ -10,11 +10,11 @@ private:
 protected:
     explicit Toggleable(std::string name);
 
-    virtual bool internalEnable() = 0;
+    virtual bool internalEnable()  = 0;
     virtual bool internalDisable() = 0;
 
 public:
-    virtual                          ~Toggleable() = default;
+    virtual ~Toggleable() = default;
     [[nodiscard]] const std::string& name() const;
     [[nodiscard]] bool               enabled() const;
     bool                             enable();
@@ -24,4 +24,4 @@ public:
 
 using PToggleable = std::shared_ptr<Toggleable>;
 
-#endif //FW_TOGGLEABLE_HPP
+#endif // FW_TOGGLEABLE_HPP
